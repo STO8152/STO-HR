@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>업무량조사 안내 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F4;
+  --surface:#FFFFFF;
+  --ink:#1B2433;
+  --ink-soft:#5B6577;
+  --ink-faint:#94A0B2;
+  --border:#E4E5EE;
+  --primary:#4F46E5;
+  --primary-dark:#4338CA;
+  --primary-soft:#EEF0FF;
+  --primary-line:#D6D5FB;
+  --accent:#1F6E5C;
+  --accent-soft:#E4F2EE;
+  --warn:#9C6B14;
+  --warn-bg:#FBF1DE;
+  --guide:#FBF1DE;
+  --guide-line:#E5C87E;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(30,25,80,0.05), 0 8px 24px -12px rgba(30,25,80,0.12);
+}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,sans-serif;
+  font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased;min-height:100vh;font-size:14.5px;line-height:1.65;
+  word-break:keep-all;overflow-wrap:break-word}
+button{font-family:inherit}
+
+.shell{display:flex;min-height:100vh}
+
+/* ── side rail ── */
+.tab-rail{width:228px;flex:none;background:var(--surface);border-right:1px solid var(--border);
+  min-height:100vh;position:sticky;top:0;display:flex;flex-direction:column;padding:18px 14px;align-self:flex-start;height:100vh}
+.rail-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;border:0;background:none;text-align:left}
+.rail-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex:none}
+.rail-brand b{font-size:14.5px;letter-spacing:-0.01em}
+.rail-brand small{display:block;font-size:11.5px;color:var(--ink-faint);font-weight:500}
+.rail-nav{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.rail-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;
+  background:none;color:var(--ink-soft);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:background .12s,color .12s}
+.rail-item svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rail-item:hover{background:var(--bg)}
+.rail-item.active{background:var(--primary-soft);color:var(--primary-dark);font-weight:700}
+.rail-item:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.rail-item .nav-tag{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;
+  padding:1px 7px;border-radius:8px;background:var(--bg);color:var(--ink-faint);
+  letter-spacing:.02em;vertical-align:1px}
+.rail-item.active .nav-tag{background:#fff;color:var(--primary-dark)}
+.rail-footer{margin-top:auto;padding:14px 10px 4px;border-top:1px solid var(--border);font-size:11.5px;color:var(--ink-faint);line-height:1.5}
+
+/* ── main ── */
+.shell-main{flex:1;min-width:0;display:flex;flex-direction:column}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:18px 28px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+h1{margin:0;font-size:24px;font-weight:900;letter-spacing:-0.01em}
+.top .sub{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.meta-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
+  background:var(--bg);border:1px solid var(--border);font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.chip b{color:var(--ink)}
+.chip.pri{background:var(--primary-soft);border-color:var(--primary-line);color:var(--primary-dark)}
+
+.app{padding:24px 28px 60px;max-width:1060px;width:100%}
+
+/* banner */
+.banner{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;
+  border-radius:var(--radius);padding:22px 26px;margin-bottom:22px;box-shadow:var(--shadow)}
+.banner b{font-size:17px;font-weight:900;display:block;margin-bottom:4px}
+.banner p{margin:0;font-size:13.5px;color:#E4E4FB}
+
+section.tab-panel{display:none}
+section.tab-panel.on{display:block}
+
+.section-title{font-size:15px;font-weight:700;margin:0 0 2px}
+.section-desc{font-size:13px;color:var(--ink-soft);margin:0 0 14px}
+h2{font-size:19px;font-weight:900;letter-spacing:-0.01em;margin:0 0 4px}
+.lede{color:var(--ink-soft);font-size:13.5px;margin:0 0 20px;max-width:640px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 24px;margin-bottom:16px}
+.summary-tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:22px}
+.summary-tbl th,.summary-tbl td{padding:13px 18px;text-align:left;font-size:14px;border-top:1px solid var(--border)}
+.summary-tbl tr:first-child th,.summary-tbl tr:first-child td{border-top:none}
+.summary-tbl th{width:150px;background:var(--bg);font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.summary-tbl td{color:var(--ink)}
+.summary-tbl td b{color:var(--primary-dark)}
+.summary-tbl caption{background:var(--primary);color:#fff;font-weight:900;font-size:14.5px;padding:12px 18px;
+  text-align:left;caption-side:top;border-radius:var(--radius) var(--radius) 0 0}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:760px){.duo{grid-template-columns:1fr}}
+.duo .card{margin:0}
+.duo .t{display:inline-block;font-size:11.5px;letter-spacing:.08em;font-weight:700;
+  padding:3px 10px;border-radius:14px;margin-bottom:10px}
+.t.past{background:var(--bg);color:var(--ink-soft)}
+.t.now{background:var(--accent-soft);color:var(--accent)}
+.duo b.q{display:block;font-size:16px;font-weight:900}
+.duo p{margin:6px 0 0;font-size:13px;color:var(--ink-soft)}
+
+/* notice */
+.notice-banner{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);
+  border:1px solid #C6E3DB;border-radius:var(--radius);padding:16px 20px;margin:18px 0;font-size:13.5px}
+.notice-banner.warn{background:var(--warn-bg);border-color:#EBD9AE}
+.notice-banner svg{width:19px;height:19px;flex:none;margin-top:2px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.notice-banner.warn svg{stroke:var(--warn)}
+.notice-banner:not(.warn) svg{stroke:var(--accent)}
+.notice-banner b{font-weight:900}
+
+/* steps */
+.steps{counter-reset:s;list-style:none;margin:0;padding:0}
+.steps li{counter-increment:s;position:relative;padding:0 0 20px 50px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:9px;
+  background:var(--primary-soft);border:1px solid var(--primary-line);color:var(--primary-dark);
+  font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center}
+.steps li:not(:last-child)::after{content:"";position:absolute;left:14px;top:36px;bottom:2px;width:2px;background:var(--border)}
+.steps b{display:block;font-size:14.5px}
+.steps p{margin:2px 0 0;color:var(--ink-soft);font-size:13px}
+
+.cell-demo{display:inline-block;width:36px;height:20px;background:var(--guide);
+  border:1px solid var(--guide-line);border-radius:4px;vertical-align:-4px;margin:0 3px}
+.hl{background:var(--guide);padding:0 3px;border-radius:3px;font-weight:700}
+
+/* toolbar & tables */
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.toolbar label{font-size:13px;font-weight:700}
+select{font:inherit;font-size:13.5px;padding:9px 34px 9px 13px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="11" height="7"><path d="M1 1l4.5 4.5L10 1" stroke="%235B6577" stroke-width="1.7" fill="none"/></svg>') no-repeat right 12px center;
+  appearance:none;cursor:pointer;min-width:230px;color:var(--ink);box-shadow:var(--shadow)}
+.combo{position:relative;min-width:260px}
+.combo input{font:inherit;font-size:13.5px;padding:9px 34px 9px 13px;border:1px solid var(--border);border-radius:10px;
+  width:100%;box-sizing:border-box;color:var(--ink);box-shadow:var(--shadow);background:var(--surface)
+  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"><circle cx="5.5" cy="5.5" r="4.5" stroke="%235B6577" stroke-width="1.5" fill="none"/><line x1="9" y1="9" x2="12.5" y2="12.5" stroke="%235B6577" stroke-width="1.5"/></svg>') no-repeat right 12px center}
+.combo input:focus{outline:2px solid var(--primary);outline-offset:1px}
+.combo-list{position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:260px;overflow-y:auto;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px -8px rgba(30,25,80,0.25);
+  z-index:20;display:none}
+.combo-list.open{display:block}
+.combo-item{padding:9px 14px;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.combo-item:hover,.combo-item.active{background:var(--primary-soft);color:var(--primary-dark)}
+.combo-item.empty{color:var(--ink-faint);cursor:default}
+.combo-item.empty:hover{background:none;color:var(--ink-faint)}
+select:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.meta{font-size:12.5px;color:var(--ink-soft)}
+.tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:12px;font-weight:700;color:var(--ink-faint);padding:12px 16px 10px;
+  border-bottom:1px solid var(--border);background:var(--surface)}
+td{padding:10px 16px;border-top:1px solid #F0F1F6;vertical-align:top}
+tr.gstart td{border-top:1px solid var(--border)}
+td.grp{font-weight:700;font-size:13px;color:var(--primary-dark);white-space:nowrap}
+td.desc{color:var(--ink-soft);font-size:12.5px}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:14px;
+  background:var(--primary-soft);color:var(--primary-dark);margin-left:8px;vertical-align:1px}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+
+/* FAQ */
+details{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;
+  overflow:hidden;box-shadow:var(--shadow)}
+summary{cursor:pointer;padding:15px 44px 15px 20px;font-weight:700;font-size:14px;list-style:none;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";position:absolute;right:20px;top:11px;font-size:19px;color:var(--ink-faint);font-weight:400}
+details[open] summary::after{content:"–"}
+details .a{padding:0 20px 16px;color:var(--ink-soft);font-size:13.5px}
+details .a b{color:var(--ink)}
+
+.footnote{font-size:12px;color:var(--ink-faint);margin-top:26px}
+
+/* responsive */
+@media(max-width:860px){
+  .shell{flex-direction:column}
+  .tab-rail{width:100%;height:auto;min-height:0;position:static;flex-direction:row;align-items:center;
+    padding:10px 12px;border-right:0;border-bottom:1px solid var(--border);overflow-x:auto;gap:6px}
+  .rail-brand{padding:0 8px 0 0}
+  .rail-brand small{display:none}
+  .rail-nav{flex-direction:row;margin:0}
+  .rail-item{white-space:nowrap;padding:8px 12px}
+  .rail-item span{font-size:13px}
+  .rail-footer{display:none}
+  .app,header.top{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="tab-rail">
+    <button type="button" class="rail-brand">
+      <span class="rail-logo">STO</span>
+      <span><b>업무량조사</b><small>서울관광재단 · 2026</small></span>
+    </button>
+    <nav class="rail-nav" role="tablist">
+      <button type="button" class="rail-item active" role="tab" aria-selected="true" data-t="intro">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.5"/></svg>
+        <span>조사 안내</span></button>
+      <button type="button" class="rail-item" role="tab" aria-selected="false" data-t="howto">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        <span>작성 가이드</span></button>
+      <button type="button" class="rail-item" role="tab" aria-selected="false" data-t="skel">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/></svg>
+        <span>업무분류표<span class="nav-tag">2026 · 현재</span></span></button>
+      <button type="button" class="rail-item" role="tab" aria-selected="false" data-t="ref">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>직무내용서<span class="nav-tag">2025</span></span></button>
+      <button type="button" class="rail-item" role="tab" aria-selected="false" data-t="faq">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.33c-.8.32-1.4 1-1.4 1.87v.3"/><circle cx="11.5" cy="16.5" r="0.5"/></svg>
+        <span>자주 묻는 질문</span></button>
+    </nav>
+    <div class="rail-footer">업무분류표 기준<br>전사업무분장표 2026. 7. 1.<br>직무내용서 2025. 12.</div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="top">
+      <div>
+        <h1>업무량조사 안내</h1>
+        <div class="sub">직무분류체계 고도화 연계 · 전 직원 업무량 조사</div>
+      </div>
+      <div class="meta-row">
+        <span class="chip">대상 <b>정규직 전 직원</b></span>
+        <span class="chip">방식 <b>팀별 구글시트</b></span>
+        <span class="chip pri">제출 기한 <b>2026년 8월 5일(수)</b></span>
+      </div>
+    </header>
+
+    <div class="app">
+
+      <div class="banner">
+        <b>우리 팀의 시간은 어디에 쓰이고 있을까요? 여러분의 꼼꼼한 고민이 필요합니다.</b>
+        <p>이번 조사는 재단의 인력과 자원이 실제 업무량에 맞게 배분되도록 하는 기초자료가 됩니다.
+        응답은 팀 단위로 종합 분석됩니다.</p>
+      </div>
+
+      <!-- ── 안내 ── -->
+      <section id="intro" class="tab-panel on">
+        <table class="summary-tbl" aria-label="업무량조사 한눈에 보기">
+          <caption>업무량조사 한눈에 보기</caption>
+          <tbody>
+            <tr><th>왜(Why?)</th><td>정원 확대와 직무 기반 인사체계 전환의 근거자료로 활용 <span style="color:var(--ink-faint)">(아래에 자세히)</span></td></tr>
+            <tr><th>무엇을(What?)</th><td><b>① 부서단위 개별 업무량</b>, <b>② 부서별 조정이 필요한 업무</b></td></tr>
+            <tr><th>어떻게(How?)</th><td>업무량 조사서 작성 — <b>이 대시보드</b>(작성 가이드 탭 참고)</td></tr>
+            <tr><th>어디에(Where?)</th><td>이메일로 안내된 <b>우리 팀 업무량 조사서 구글시트</b>에 입력</td></tr>
+            <tr><th>언제까지(When?)</th><td><b>2026. 8. 5.(수)</b>까지</td></tr>
+          </tbody>
+        </table>
+        <h2>이 조사, 왜 또 하나요?</h2>
+        <p class="lede">작년 말 직무내용서를 제출해 주셨죠. 그 자료는 버려지지 않았습니다 —
+        이번 조사표의 업무분류표에 이미 반영되어 있습니다. 이번 조사는 그 후속 단계입니다.</p>
+        <div class="duo">
+          <div class="card">
+            <span class="t past">작년 · 직무내용서</span>
+            <b class="q">"무슨 일을 하는가"</b>
+            <p>직무 단위로 과업의 종류와 내용을 정리했습니다. 직무분류체계의 뼈대가 됐습니다.</p>
+          </div>
+          <div class="card">
+            <span class="t now">이번 · 업무량조사</span>
+            <b class="q">"그 일에 시간이 얼마나 드는가"</b>
+            <p>개인 단위로 업무별 시간 비중을 숫자로 적습니다. 인력 배분 판단의 근거가 됩니다.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="section-title">조사 결과는 이렇게 쓰입니다</p>
+          <p style="margin:8px 0 0;color:var(--ink-soft)">
+          ① <b style="color:var(--ink)">정원 확대와 중장기 직무 확장을 통한 조직 성장의 근거자료</b>로 쓰일 예정입니다 —
+          실제 업무량이 많은 팀·사업을 데이터로 확인해 인력 증원의 객관적 근거를 마련합니다.<br>
+          ② <b style="color:var(--ink)">직무 기반 인사체계로 전환</b>해 더 체계적인 인사관리 기반을 만듭니다 —
+          새 직무분류체계의 직무별 적정인력 산정에 이 조사 결과가 직접 활용됩니다.<br>
+          ③ 2027년 조직개편과 정원 조정 논의의 출발점이 됩니다.</p>
+        </div>
+
+        <div class="card">
+          <p class="section-title">무엇이 준비되어 있나요</p>
+          <p style="margin:8px 0 0;color:var(--ink-soft)">
+          팀별 조사표에는 <span class="cell-demo" aria-label="노란 가이드 셀 예시"></span>
+          <b style="color:var(--ink)">노란 가이드 셀</b>과 함께 업무분류표가 미리 입력되어 있습니다.
+          업무분장표와 작년 직무내용서를 바탕으로 정리한 것이라, 여러분은
+          <span class="hl">본인 열에 비중 숫자만 입력</span>하면 됩니다.
+          이 업무분류표는 업무분장표와 현업 확인을 거쳐 세밀하게 설계됐습니다. 되도록 제공된 항목 안에서 작성해 주시고,
+          정말 별도 항목이 필요한 경우(특히 업무량 비중이 5% 이상인데 업무분류표 어디에도 없는 업무)에 한해
+          하단에 새 행을 추가해 주세요.</p>
+        </div>
+      </section>
+
+      <!-- ── 작성 가이드 ── -->
+      <section id="howto" class="tab-panel">
+        <h2>작성 가이드</h2>
+        <p class="lede">다섯 단계면 끝납니다. 원칙은 하나 — 문서상 업무가 아니라
+        <b>실제로 시간을 쓰는 업무</b> 기준으로 적어 주세요.</p>
+
+        <div class="card">
+          <ol class="steps">
+            <li><b>팀 구글시트를 엽니다</b>
+                <p>팀별로 공유된 링크로 접속하세요. 다른 팀 시트는 보이지 않습니다.</p></li>
+            <li><b>본인 이름 열을 찾습니다</b>
+                <p>상단에 이름이 미리 입력되어 있습니다. 노란 셀은 업무분장표(7. 1. 기준)상
+                본인 담당 업무의 위치를 표시한 참고용 가이드입니다.</p></li>
+            <li><b>최근 1년을 기준으로 비중을 적습니다</b>
+                <p>지난 12개월 동안 각 업무에 쓴 시간의 평균 비율을 5% 단위로 입력합니다.
+                행사·시즌 업무가 있다면 특정 시점이 아닌 연평균으로 환산해 주세요.
+                이렇게 모인 숫자가 <strong>정원 확대와 체계적인 직무 기반 인사·조직 운영</strong>의 근거가 됩니다.</p></li>
+            <li><b>합계가 100%인지 확인합니다</b>
+                <p>하단 합계 행이 자동 계산됩니다. 100%가 아니면 안내 문구가 표시됩니다.</p></li>
+            <li><b>비중 5% 이상인데 목록에 없는 업무만 추가합니다</b>
+                <p>대부분의 업무는 업무분류표 안에 포함되어 있으니 가장 가까운 항목을 활용해 주세요.
+                   업무량이 크고(5% 이상) 업무분류표에 없는 경우에만 하단 빈 행에 추가합니다.</p></li>
+          </ol>
+        </div>
+
+        <div class="notice-banner">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.1L21 9l-4.9 4.4L17.2 20 12 16.7 6.8 20l1.1-6.6L3 9l6.4-.9z"/></svg>
+          <div><b>업무분류표를 최대한 활용해 주세요.</b><br>
+          이 업무분류표는 원문 확인을 거쳐 세밀하게 설계됐습니다. 비중이 작은 업무는 가장 가까운 항목에 포함시켜 주시고,
+          <b>업무량 비중이 5% 이상으로 크면서 업무분류표 어디에도 해당하지 않는 업무</b>가 있을 때만
+          하단에 새 행을 추가해 주세요.</div>
+        </div>
+
+        <div class="card">
+          <p class="section-title">비중 작성 기준</p>
+          <p style="margin:8px 0 0;color:var(--ink-soft)">
+          · 한 행의 최소 단위는 <b style="color:var(--ink)">5%</b>입니다. 그보다 작은 업무는 가장 가까운 업무에 합쳐 주세요.<br>
+          · 여러 사업에 걸친 업무(예: 공통 홍보)는 실제 시간이 쓰인 사업의 행에 나눠 적습니다.</p>
+        </div>
+      </section>
+
+      <!-- ── 팀 업무분류표 ── -->
+      <section id="skel" class="tab-panel">
+        <h2>2026년 업무분류표(현재)</h2>
+        <p class="lede">조사표에 미리 입력된 과업(사업)과 수행업무입니다. 다른 팀 업무분류표도 열람할 수 있으니
+        행을 나누는 기준을 참고하세요. 개인별 정보는 표시되지 않습니다.</p>
+        <div class="toolbar">
+          <label for="teamSel">팀 선택</label>
+          <div class="combo">
+            <input type="text" id="teamSel" placeholder="팀 이름 검색 또는 선택" autocomplete="off">
+            <div class="combo-list" id="teamSelList"></div>
+          </div>
+          <span class="meta" id="skelMeta"></span>
+        </div>
+        <div class="tbl-card">
+          <table aria-label="선택한 팀의 과업과 수행업무 목록">
+            <thead><tr><th style="width:230px">과업 (사업)</th><th>수행업무</th></tr></thead>
+            <tbody id="skelBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── 지난 직무내용서 ── -->
+      <section id="ref" class="tab-panel">
+        <h2>2025년 직무내용서 자료실</h2>
+        <p class="lede">2025년 12월 여러분이 직접 작성한 직무내용서 원문입니다.
+        "작년에 뭐라고 썼더라?" 할 때 참고하세요.</p>
+        <div class="notice-banner warn">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div><b>참고용입니다.</b> 작년 조직(MICE1·2팀, 스마트관광팀 등) 기준이라 지금과 다를 수 있고,
+          그 사이 업무도 달라졌습니다. 조사표는 이 내용에 맞추지 말고,
+          <b>지금 실제로 하고 있는 일</b> 기준으로 작성해 주세요.</div>
+        </div>
+        <div class="toolbar">
+          <label for="jobSel">작성팀 선택</label>
+          <div class="combo">
+            <input type="text" id="jobSel" placeholder="팀명 또는 직무명 검색" autocomplete="off">
+            <div class="combo-list" id="jobSelList"></div>
+          </div>
+          <span class="meta" id="refMeta"></span>
+        </div>
+        <div class="tbl-card">
+          <table aria-label="선택한 직무의 과업과 설명">
+            <thead><tr><th style="width:150px">주요 업무</th><th style="width:270px">수행과업</th><th>과업설명</th></tr></thead>
+            <tbody id="refBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── FAQ ── -->
+      <section id="faq" class="tab-panel">
+        <h2>자주 묻는 질문</h2>
+        <p class="lede">여기 없는 질문은 인사팀 김경희 과장(내선 8152, kyunghee)에게 문의해 주세요.</p>
+
+        <details><summary>작년에 직무내용서를 냈는데 왜 또 조사하나요?</summary>
+        <div class="a">성격이 다릅니다. 작년 자료는 <b>업무의 종류</b>(무슨 일을 하는가)를 정리한 것이고,
+        이번 조사는 <b>업무의 양</b>(시간이 얼마나 드는가)을 측정합니다. 인력 배분을 판단하려면 둘 다
+        필요합니다. 작년 제출 내용은 이번 조사표 업무분류표에 이미 반영되어 있어, 처음부터 다시 쓰실 필요가 없습니다.</div></details>
+
+        <details><summary>내 응답을 누가 볼 수 있나요?</summary>
+        <div class="a">팀 시트는 <b>같은 팀원과 인사팀만</b> 접근할 수 있고, 다른 팀에는 공개되지 않습니다.
+        분석 단계에서는 팀 단위로 종합되며, 기능조정 의견서와 팀 질적평가는 별도 채널로 비공개 제출받습니다.</div></details>
+
+        <details><summary>이 조사 결과는 어디에 쓰이나요?</summary>
+        <div class="a"><b>정원 확대와 중장기 직무 확장을 통해 조직을 키우는 근거자료</b>로 쓰일 예정입니다.
+        업무량이 실제로 많은 팀·사업을 데이터로 확인해 인력 증원의 객관적 근거를 마련하고,
+        <b>직무 기반 인사체계로 전환</b>해 직무별 적정인력을 체계적으로 관리하는 기반을 만듭니다.
+        2027년 조직개편 논의에도 함께 활용됩니다.</div></details>
+
+        <details><summary>초과근무가 많은데, 비중에 어떻게 반영하나요?</summary>
+        <div class="a">비중은 소정근로시간(100%) 기준으로만 적습니다. 초과근무는 개인 실적이 아니라
+        <b>팀 단위 종합 지표</b>(근태자료)로 별도 분석되어, 팀의 업무량 판단에 함께 활용됩니다.
+        비중을 부풀릴 필요가 없습니다 — 부풀리면 오히려 팀 내 업무 구조가 왜곡되어 분석에서 걸러집니다.</div></details>
+
+        <details><summary>업무분류표에 없는 일을 하고 있어요. 어떻게 하나요?</summary>
+        <div class="a">먼저 비슷한 성격의 기존 항목이 있는지 확인해 주세요. 대부분의 업무는 업무분류표 안의 항목에 포함됩니다.
+        다만 <b>업무량 비중이 5% 이상</b>으로 크고 업무분류표 어디에도 해당하지 않는 업무라면, 하단 빈 행에 새로 추가해 주세요.
+        5% 미만의 자잘한 업무는 새 행을 만들기보다 가장 가까운 항목에 합쳐서 비중에 반영해 주시면 됩니다.</div></details>
+
+        <details><summary>업무 비중이 시기마다 크게 달라요. 언제 기준인가요?</summary>
+        <div class="a"><b>최근 1년 연평균</b>입니다. 예를 들어 연 1회 축제를 담당한다면, 준비·운영·정산에
+        쓴 시간을 1년 전체로 나눠 환산해 주세요. 조사 시점(7월)의 상황만 적으면 계절성 업무가 왜곡됩니다.</div></details>
+
+        <details><summary>겸직·파견 중이거나 팀을 옮긴 지 얼마 안 됐어요.</summary>
+        <div class="a">현재 소속 팀 시트에 작성하되, 표지의 겸직 칸에 상황을 적어 주세요.
+        전입 후 기간이 짧으면 현 소속에서의 기간을 기준으로 작성하고 비고로 남겨 주시면 됩니다.</div></details>
+
+        <details><summary>작성하다가 실수로 업무분류표를 지웠어요.</summary>
+        <div class="a">보호 설정이 되어 있어 경고 창이 뜨지만, 수정 자체는 가능합니다.
+        실수로 지웠다면 시트의 실행취소(Ctrl+Z)를 쓰거나 인사팀에 알려 주세요. 원본이 보관되어 있어 복구할 수 있습니다.</div></details>
+      </section>
+
+      <p class="footnote">서울관광재단 업무량조사 · 제출기한 2026. 8. 5.(수) · 문의: 인사팀 김경희 과장 (내선 8152, kyunghee)</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SKEL=[["AI혁신팀", "AI 기반 서울관광 로드맵 수립", "AI 기반 서울관광 로드맵 기획"], ["AI혁신팀", "전사 통합 정보화 인프라 지원", "재단 ICT 기획 업무"], ["AI혁신팀", "전사 통합 정보화 인프라 지원", "전산ㆍ네트워크 인프라 관리 업무"], ["AI혁신팀", "전사 통합 정보화 인프라 지원", "재단 내부행정시스템(ERP·그룹웨어) 관리"], ["AI혁신팀", "전사 통합 정보화 인프라 지원", "개인정보보호 및 정보보안 관리(정책수립·점검·사고대응·컴플라이언스)"], ["AI혁신팀", "전사 통합 정보화 인프라 지원", "전사 ICT 프로젝트 관리 및 임직원 디지털 역량강화 교육훈련"], ["AI혁신팀", "서울관광 온라인 서비스 운영", "서울관광 온라인 서비스 인프라 담당"], ["AI혁신팀", "서울관광 온라인 서비스 운영", "서울관광 통합시스템 클라우드 및 모니터링 담당"], ["AI혁신팀", "서울관광 온라인 서비스 운영", "생성형 AI 챗봇 운영 및 고도화 지원"], ["AI혁신팀", "홈페이지 운영·관리", "비짓서울 홈페이지 관련 사이트 및 제휴사 관리"], ["AI혁신팀", "홈페이지 운영·관리", "재단 홈페이지 운영 ‧ 관리"], ["AI혁신팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["AI혁신팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["AI혁신팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["MICE마케팅팀", "기업회의·인센티브 유치마케팅 및 개최 지원", "연간 유치마케팅 계획 수립"], ["MICE마케팅팀", "기업회의·인센티브 유치마케팅 및 개최 지원", "권역별(동남아·구미주·중화권) 네트워크·파트너십 관리"], ["MICE마케팅팀", "기업회의·인센티브 유치마케팅 및 개최 지원", "전시회·로드쇼 참가 마케팅"], ["MICE마케팅팀", "기업회의·인센티브 유치마케팅 및 개최 지원", "기업회의·인센티브 개최 지원(규모별 지원·웰컴키트)"], ["MICE마케팅팀", "타 시도 연계 MICE 공동마케팅(PLUS CITIES)", "타 시도 연계 PLUS CITIES 지원 프로그램 기획 및 운영"], ["MICE마케팅팀", "타 시도 연계 MICE 공동마케팅(PLUS CITIES)", "PLUS CITIES 파트너 지자체 관리 및 협력"], ["MICE마케팅팀", "타 시도 연계 MICE 공동마케팅(PLUS CITIES)", "타 시도 연계 MICE 공동 마케팅 기획 및 추진"], ["MICE마케팅팀", "서울 MICE 얼라이언스(SMA) 운영", "연간 운영계획 수립"], ["MICE마케팅팀", "서울 MICE 얼라이언스(SMA) 운영", "회원사 선발·관리 및 운영체계 강화"], ["MICE마케팅팀", "서울 MICE 얼라이언스(SMA) 운영", "비즈니스 활성화 행사·공동 유치마케팅"], ["MICE마케팅팀", "서울 MICE 얼라이언스(SMA) 운영", "거버넉스 구축 및 파트너쉽 확대"], ["MICE마케팅팀", "관광·MICE 기업지원센터 운영", "연간 운영계획 수립"], ["MICE마케팅팀", "관광·MICE 기업지원센터 운영", "전문위원 위촉 및 상담·컨설팅 프로그램 운영"], ["MICE마케팅팀", "관광·MICE 기업지원센터 운영", "업계 교육·멘토링 및 센터 홍보"], ["MICE마케팅팀", "MICE 콘텐츠 개발·확산", "서울 MICE 홈페이지·종합지원시스템 운영"], ["MICE마케팅팀", "MICE 콘텐츠 개발·확산", "홍보 콘텐츠 기획 및 SNS 채널(영문) 운영"], ["MICE마케팅팀", "MICE 콘텐츠 개발·확산", "MICE 영문 번역·감수 업무 지원"], ["MICE마케팅팀", "MICE 콘텐츠 개발·확산", "해외 마케팅·홍보 및 대외협력(매체 광고·언론홍보·전시박람회 연계·유관기관 협력)"], ["MICE마케팅팀", "서울 MICE 플라자 운영", "사업계획·예산 및 시설 계약 관리"], ["MICE마케팅팀", "서울 MICE 플라자 운영", "회의실 대관·시설 운영 및 서울워케이션센터 운영"], ["MICE마케팅팀", "서울 MICE 플라자 운영", "수익 정산 및 회계 관리"], ["MICE마케팅팀", "부서 공통·평가 대응", "경영평가 지표 관리 및 부서 업무계획"], ["MICE마케팅팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["MICE마케팅팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["MICE전략팀", "컨벤션 유치마케팅", "컨벤션 유치마케팅 계획 수립"], ["MICE전략팀", "컨벤션 유치마케팅", "국제회의 유치기반 확대 및 네트워크 협력"], ["MICE전략팀", "컨벤션 유치마케팅", "해외 전시회 서울 홍보관 운영·참가"], ["MICE전략팀", "컨벤션 유치마케팅", "유치 종합지원 운영 및 유치 DB 관리"], ["MICE전략팀", "서울 대표 국제회의 육성", "육성계획 수립 및 발굴"], ["MICE전략팀", "서울 대표 국제회의 육성", "단계별 육성 지원"], ["MICE전략팀", "서울 대표 국제회의 육성", "중장기 육성 컨설팅·교육프로그램 운영"], ["MICE전략팀", "MICE 유치·개최 지원", "국제회의 단계별 지원 계획 수립 및 지원금·특별지원"], ["MICE전략팀", "MICE 유치·개최 지원", "전시회 단계별  계획 수립 및 지원금·특별지원"], ["MICE전략팀", "MICE 유치·개최 지원", "국제이벤트 단계별  계획 수립 및 지원금·특별지원"], ["MICE전략팀", "MICE 유치·개최 지원", "유니크베뉴 활성화 지원"], ["MICE전략팀", "MICE 국제협력·통계분석", "글로벌 PCO 등 국제 네트워크 협력"], ["MICE전략팀", "MICE 국제협력·통계분석", "UIA·ICCA 개최실적 조사 및 통계분석"], ["MICE전략팀", "국제교류복합지구 개발 업무", "국제교류복합지구 개발 관련 업무 지원"], ["MICE전략팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["MICE전략팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응 및 부서 업무계획"], ["MICE전략팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["감사실", "내‧외부 감사 업무", "내부 · 외부 감사 업무"], ["감사실", "내‧외부 감사 업무", "투자출연기관 자체감사 활동 평가"], ["감사실", "청렴‧반부패 업무 및 공직기강 확립", "공직기강, 행동강령 점검 및 관리"], ["감사실", "청렴‧반부패 업무 및 공직기강 확립", "청렴 · 반부패 업무"], ["감사실", "인권경영 업무", "인권경영 운영 및 관리"], ["감사실", "적극행정 제도 운영 및 우수사례 발굴", "적극행정 제도 운영 및 관리"], ["감사실", "대‧내외 민원 및 법무 관리", "대 ‧ 내외 민원 대응 및 관리"], ["감사실", "대‧내외 민원 및 법무 관리", "법무 관리 업무"], ["감사실", "부서 공통·평가 대응", "경영평가 지표 관리"], ["감사실", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["감사실", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리 등)"], ["경영지원팀", "정보공개 및 기록물관리", "정보공개·기록물 관리"], ["경영지원팀", "물품, 안전/보건 관리, 총무", "물품 및 자산관리 담당"], ["경영지원팀", "물품, 안전/보건 관리, 총무", "재단 안전보건 관리(계획 수립, 예방프로그램, 협의체, 시설 안전, 건강프로그램 운영 등)"], ["경영지원팀", "물품, 안전/보건 관리, 총무", "총무 업무(물품구매, 사내행사 운영 등)"], ["경영지원팀", "서울관광플라자 운영", "플라자 시설관리 및 유지보수"], ["경영지원팀", "서울관광플라자 운영", "(고유)서울관광플라자 운영 및 활성화 담당"], ["경영지원팀", "서울관광플라자 운영", "플라자 입주사 지원"], ["경영지원팀", "서울관광플라자 운영", "(고유)전시교육센터 운영 담당"], ["경영지원팀", "기부채납시설 운영 · 관리(청사 관리)", "기부채납시설 운영 · 관리(청사 관리)"], ["경영지원팀", "ESG 경영관리", "재단 ESG 경영관리"], ["경영지원팀", "재무·회계 관리", "자금 운영(자금 운용, 주거래은행 관리)"], ["경영지원팀", "재무·회계 관리", "세무·회계(부가세 신고, 외부 회계·세무감사 수감)"], ["경영지원팀", "입찰·계약 관리", "입찰·계약 운영(발주·공고, 수의계약, 계약정보 공개 등)"], ["경영지원팀", "입찰·계약 관리", "계약제도 개선 및 사내교육"], ["경영지원팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["경영지원팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["경영지원팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리 등)"], ["관광브랜드팀", "서울굿즈 운영", "사업기획 및 상품·판매 전략 수립"], ["관광브랜드팀", "서울굿즈 운영", "브랜드 마케팅 및 판매 프로모션 운영"], ["관광브랜드팀", "서울굿즈 운영", "제휴처(입점업체·브랜드) 유치 및 계약 관리"], ["관광브랜드팀", "서울굿즈 운영", "판매관·유통채널 확대 및 운영 관리"], ["관광브랜드팀", "서울굿즈 운영", "판매정산·재고관리 시스템 개발 및 고도화"], ["관광브랜드팀", "서울굿즈 운영", "회계 정산 및 재무 관리"], ["관광브랜드팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["관광브랜드팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["관광브랜드팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["관광서비스팀", "디스커버서울패스 운영", "사업 기획 및 상품·판매 전략 수립"], ["관광서비스팀", "디스커버서울패스 운영", "브랜드 마케팅 및 판매 프로모션 운영"], ["관광서비스팀", "디스커버서울패스 운영", "제휴시설 유치 및 운영 관리"], ["관광서비스팀", "디스커버서울패스 운영", "온·오프라인 판매/유통채널 확대 및 관리"], ["관광서비스팀", "디스커버서울패스 운영", "통합시스템(웹사이트, 앱, ERP) 개발 및 유지보수"], ["관광서비스팀", "디스커버서울패스 운영", "고객센터 운영 및 서비스 품질 관리"], ["관광서비스팀", "디스커버서울패스 운영", "회계 정산 및 재무 관리"], ["관광서비스팀", "서울문화관광해설사 운영(대행)", "운영계획 및 해설사 네트워크 관리"], ["관광서비스팀", "서울문화관광해설사 운영(대행)", "도보해설관광 프로그램 운영"], ["관광서비스팀", "서울문화관광해설사 운영(대행)", "사업 결과보고 및 정산"], ["관광서비스팀", "서울의료관광 활성화(대행)", "사업 총괄·기획 및 결과보고·정산"], ["관광서비스팀", "서울의료관광 활성화(대행)", "거버넌스 구축·관리(특별위원회·추진협의회·운영위원회 네트워크)"], ["관광서비스팀", "서울의료관광 활성화(대행)", "협력기관 지원사업 기획·운영(코디네이터 관리·교육훈련·행사개최)"], ["관광서비스팀", "서울의료관광 활성화(대행)", "마케팅·홍보 운영(온오프라인 채널, 국내외 행사)"], ["관광서비스팀", "서울의료관광 활성화(대행)", "어권별 안내·상담 및 시장동향 조사(영어권)"], ["관광서비스팀", "서울의료관광 활성화(대행)", "어권별 안내·상담 및 시장동향 조사(중국어권)"], ["관광서비스팀", "서울의료관광 활성화(대행)", "어권별 안내·상담 및 시장동향 조사(일본어권)"], ["관광서비스팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["관광서비스팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["관광서비스팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["관광인프라팀", "관광정보센터 운영 총괄", "운영계획 수립 및 예산·정산·결과보고"], ["관광인프라팀", "관광정보센터 운영 총괄", "거점별 관광정보센터·안내소 위수탁관리 및 시설 유지관리(유지보수)"], ["관광인프라팀", "관광정보센터 운영 총괄", "통합아카데미 운영(안내소 교육훈련 담당)"], ["관광인프라팀", "관광정보센터 운영 총괄", "센터인력 인사·노무 지원(채용지원, 근무배치, 근태관리, 고충처리 등)"], ["관광인프라팀", "관광정보센터 운영 총괄", "운영실적 관리(사업 집행내역·안내실적 등 주간관리)"], ["관광인프라팀", "한류문화체험센터(서울컬처라운지) 운영", "운영계획 및 예산 관리"], ["관광인프라팀", "한류문화체험센터(서울컬처라운지) 운영", "현장운영·프로그램 관리"], ["관광인프라팀", "한류문화체험센터(서울컬처라운지) 운영", "홍보·마케팅 및 결과보고·정산 관리"], ["관광인프라팀", "서울관광 대표지도·안내서 제작", "제작 기획·발주 및 감수"], ["관광인프라팀", "서울관광 대표지도·안내서 제작", "배포·재고 관리"], ["관광인프라팀", "도시민박업·한옥체험업 활성화 지원", "지원사업 운영·관리 및 정산"], ["관광인프라팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["관광인프라팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["관광인프라팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["관광자원개발팀", "서울달 운영", "운영계획·협약 및 예산 관리"], ["관광자원개발팀", "서울달 운영", "관광업계(호텔·여행사 등) 협력체계 관리"], ["관광자원개발팀", "서울달 운영", "홍보마케팅·SNS 운영"], ["관광자원개발팀", "서울달 운영", "현장운영·안전 관리"], ["관광자원개발팀", "서울달 운영", "매출 정산 및 회계 관리"], ["관광자원개발팀", "서울 등산관광 활성화", "사업계획 및 예산 관리"], ["관광자원개발팀", "서울 등산관광 활성화", "홍보 콘텐츠·SNS 운영"], ["관광자원개발팀", "서울 등산관광 활성화", "등산관광센터·프로그램 운영(등산 물품 대여 서비스 포함)"], ["관광자원개발팀", "서울 등산관광 활성화", "사업 결과보고 및 정산(실적관리)"], ["관광자원개발팀", "서울관광 푸드 페스티벌", "사업계획 수립 및 예산 관리"], ["관광자원개발팀", "서울관광 푸드 페스티벌", "참여업체·유관기관 협력 관리"], ["관광자원개발팀", "서울관광 푸드 페스티벌", "홍보·프로모션"], ["관광자원개발팀", "서울관광 푸드 페스티벌", "현장운영·안전 관리"], ["관광자원개발팀", "서울관광 푸드 페스티벌", "사업 결과보고 및 정산"], ["관광자원개발팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["관광자원개발팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["관광자원개발팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["관광축제이벤트팀", "서울빛초롱축제", "사업계획 수립 및 예산 관리"], ["관광축제이벤트팀", "서울빛초롱축제", "유관기관·협찬사·참가업체 네트워크 관리"], ["관광축제이벤트팀", "서울빛초롱축제", "홍보 콘텐츠 기획 및 프로모션 운영"], ["관광축제이벤트팀", "서울빛초롱축제", "현장 운영·안전 관리(대행사 관리 포함)"], ["관광축제이벤트팀", "서울빛초롱축제", "사업 결과보고 및 정산"], ["관광축제이벤트팀", "서울스프링페스티벌", "사업계획 수립 및 예산 관리"], ["관광축제이벤트팀", "서울스프링페스티벌", "유관기관·협찬사·참가업체 네트워크 관리"], ["관광축제이벤트팀", "서울스프링페스티벌", "홍보 콘텐츠 기획 및 프로모션 운영"], ["관광축제이벤트팀", "서울스프링페스티벌", "현장 운영·안전 관리(대행사 관리 포함)"], ["관광축제이벤트팀", "서울스프링페스티벌", "사업 결과보고 및 정산"], ["관광축제이벤트팀", "미디어아트 관광 콘텐츠 운영", "운영계획 수립 및 예산 관리"], ["관광축제이벤트팀", "미디어아트 관광 콘텐츠 운영", "콘텐츠·프로그램 운영"], ["관광축제이벤트팀", "미디어아트 관광 콘텐츠 운영", "홍보 및 결과보고·정산"], ["관광축제이벤트팀", "서울썸머비치", "행사 기획·운영 지원"], ["관광축제이벤트팀", "서울썸머비치", "홍보·현장 지원"], ["관광축제이벤트팀", "광화문 마켓", "행사 기획·운영 지원"], ["관광축제이벤트팀", "광화문 마켓", "홍보·현장 지원"], ["관광축제이벤트팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["관광축제이벤트팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["관광축제이벤트팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["글로벌관광산업팀", "서울국제트래블마트(SITM)", "사업계획 수립 및 예산 관리"], ["글로벌관광산업팀", "서울국제트래블마트(SITM)", "바이어·셀러 유치 및 네트워크"], ["글로벌관광산업팀", "서울국제트래블마트(SITM)", "홍보관·팸투어 프로모션 운영"], ["글로벌관광산업팀", "서울국제트래블마트(SITM)", "행사 운영(상담회·네트워킹 등)"], ["글로벌관광산업팀", "서울국제트래블마트(SITM)", "사업 결과보고 및 정산"], ["글로벌관광산업팀", "서울관광설명회·해외 관광교역전", "설명회·교역전 기획 및 예산 관리"], ["글로벌관광산업팀", "서울관광설명회·해외 관광교역전", "해외 현지 네트워크 및 공동참가기관 관리"], ["글로벌관광산업팀", "서울관광설명회·해외 관광교역전", "현지 행사·홍보관 운영"], ["글로벌관광산업팀", "서울관광설명회·해외 관광교역전", "사업 결과보고 및 정산"], ["글로벌관광산업팀", "해외 B2B 네트워크·협력", "협력체계 구축 종합계획 수립"], ["글로벌관광산업팀", "해외 B2B 네트워크·협력", "핵심여행사·유관기관 협력체계 구축"], ["글로벌관광산업팀", "해외 B2B 네트워크·협력", "재단 사업설명회 개최"], ["글로벌관광산업팀", "서울 관광스타트업 육성", "공모·선정 및 지원 운영"], ["글로벌관광산업팀", "서울 관광스타트업 육성", "스타트업-관광업계 상생협력 프로젝트"], ["글로벌관광산업팀", "관광업계 지원사업", "우수관광상품 개발운영(대행)"], ["글로벌관광산업팀", "관광업계 지원사업", "이벤트 연계 외래관광객 유치 지원"], ["글로벌관광산업팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["글로벌관광산업팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["글로벌관광산업팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["글로벌마케팅팀", "서울관광 통합마케팅", "통합마케팅(IMC) 전략·계획 수립 및 예산 관리"], ["글로벌마케팅팀", "서울관광 통합마케팅", "사업 결과보고 및 정산(공정률 관리)"], ["글로벌마케팅팀", "서울관광 통합마케팅", "마케팅 효과 측정 및 조사"], ["글로벌마케팅팀", "서울관광 해외광고 제작", "해외광고 및 대표 홍보콘텐츠 기획·제작"], ["글로벌마케팅팀", "서울관광 해외홍보", "디지털·레거시 미디어 홍보 콘텐츠 노출"], ["글로벌마케팅팀", "서울관광 해외홍보", "신규 매체 발굴 및 콘텐츠 확산"], ["글로벌마케팅팀", "서울관광 해외홍보", "유관기관·언론매체 활용 홍보"], ["글로벌마케팅팀", "글로벌축제·이벤트 연계 마케팅", "현지 밀착 프로모션 및 축제·이벤트 연계 마케팅"], ["글로벌마케팅팀", "글로벌축제·이벤트 연계 마케팅", "마케팅 홍보물·기념품 제작"], ["글로벌마케팅팀", "국제기구 협력·네트워크 구축", "국제기구 협력 및 네트워크 구축"], ["글로벌마케팅팀", "서울관광 해외지사 설립·운영", "해외지사 설립 추진 및 운영 지원"], ["글로벌마케팅팀", "국제관광·MICE본부 주무", "본부 주무 업무 및 주요 보고자료 취합"], ["글로벌마케팅팀", "국제관광·MICE본부 주무", "본부 업무추진비·문서 관리"], ["글로벌마케팅팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["글로벌마케팅팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["글로벌마케팅팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["기획예산팀", "경영전략 및 사업계획 수립", "중장기 경영전략 및 연간 경영전략 수립"], ["기획예산팀", "경영전략 및 사업계획 수립", "연간 사업계획 취합·조정"], ["기획예산팀", "조직, 직제 및 업무분장 관리", "조직 · 직제 및 업무분장 관리"], ["기획예산팀", "시의회 대응 및 대외기관 지원", "시의회 대응 업무(업무보고, 행정사무감사, 요구자료 등) 지원"], ["기획예산팀", "시의회 대응 및 대외기관 지원", "대외기관 업무협력(MOU 관리 등) 지원"], ["기획예산팀", "예산 편성·집행 관리", "연간 예산편성 및 조정"], ["기획예산팀", "예산 편성·집행 관리", "추가경정예산 소요 분석 및 관리"], ["기획예산팀", "예산 편성·집행 관리", "예산 집행기준 작성 및 관리"], ["기획예산팀", "예산 편성·집행 관리", "주요 예산 집행 모니터링"], ["기획예산팀", "재원 확보 및 중장기 재정전략", "재단 출연금 신청 및 관리"], ["기획예산팀", "재원 확보 및 중장기 재정전략", "중장기 재무전략, 중기재정 운영계획 수립"], ["기획예산팀", "이사회 운영계획 수립 및 운영관리", "재단 이사회 운영계획 수립 및 진행"], ["기획예산팀", "이사회 운영계획 수립 및 운영관리", "임원추천위원회 구성 및 법인등기 관리"], ["기획예산팀", "사규·대외인증 관리", "사규관리(규정/지침 등 제규범)"], ["기획예산팀", "사규·대외인증 관리", "재단 대외수상 및 실적관리"], ["기획예산팀", "사규·대외인증 관리", "후원명칭 사용승인"], ["기획예산팀", "경영평가 및 부서평가", "서울시 투자·출연기관 경영평가 담당"], ["기획예산팀", "경영평가 및 부서평가", "기관장 성과지표 및 실적관리"], ["기획예산팀", "경영평가 및 부서평가", "내부(부서) 성과평가 지표 및 성과관리"], ["기획예산팀", "서울시민 · 외국인 실태분석 등 연구업무", "재단 연구업무(서울시민 · 외국인 실태분석)"], ["기획예산팀", "규제혁신 및 창의제안 관리", "규제혁신 및 창의제안 담당"], ["기획예산팀", "부서 공통·평가 대응", "대외기관 요청사항 관리 및 자료 작성"], ["기획예산팀", "부서 공통·평가 대응", "주요 정례회의 운영 및 이행실적 관리"], ["기획예산팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리 등)"], ["디지털마케팅팀", "서울관광 온라인 서비스 운영(비짓서울 웹·앱)", "콘텐츠 기획(관광정보 현행화, 웹·앱 콘텐츠 기획)"], ["디지털마케팅팀", "서울관광 온라인 서비스 운영(비짓서울 웹·앱)", "채널 운영·관리(브랜드 홍보·이벤트, 검색엔진최적화, 만족도조사)"], ["디지털마케팅팀", "서울관광 공식 소셜미디어(SNS) 운영", "채널 운영·관리(4개 어권 12개 채널)"], ["디지털마케팅팀", "서울관광 공식 소셜미디어(SNS) 운영", "크리에이터·협업 관리(어권별 캠페인·크리에이터 협업 마케팅)"], ["디지털마케팅팀", "서울관광 공식 유튜브 운영", "콘텐츠 기획(영상 콘텐츠 기획·제작)"], ["디지털마케팅팀", "서울관광 공식 유튜브 운영", "채널 운영·관리(비짓서울TV, 대시민 캠페인)"], ["디지털마케팅팀", "어권별 해외 홍보·콘텐츠 마케팅", "일어권 콘텐츠 기획·운영"], ["디지털마케팅팀", "어권별 해외 홍보·콘텐츠 마케팅", "중국어 번체권 콘텐츠 기획·운영 및 효과 분석"], ["디지털마케팅팀", "어권별 해외 홍보·콘텐츠 마케팅", "중국어 간체권 콘텐츠 기획·운영 및 효과 분석"], ["디지털마케팅팀", "어권별 해외 홍보·콘텐츠 마케팅", "영어·글로벌권 콘텐츠 기획·운영 및 효과 분석"], ["디지털마케팅팀", "어권별 해외 홍보·콘텐츠 마케팅", "전사 외국어 번역·감수·자문 지원"], ["디지털마케팅팀", "글로벌서울메이트 운영", "서울관광 홍보 활동(미션) 기획 및 실적관리"], ["디지털마케팅팀", "글로벌서울메이트 운영", "크리에이터 운영·협업 및 네트워킹 행사"], ["디지털마케팅팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["디지털마케팅팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["디지털마케팅팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["예술상생관광팀", "특화관광 발굴·홍보 강화(서울예술관광)", "서울예술관광 활성화 사업계획 수립"], ["예술상생관광팀", "특화관광 발굴·홍보 강화(서울예술관광)", "서울 예술관광 얼라이언스(SATA) 운영"], ["예술상생관광팀", "특화관광 발굴·홍보 강화(서울예술관광)", "서울 아트투어 코스 활성화 및 통합 플랫폼 운영"], ["예술상생관광팀", "특화관광 발굴·홍보 강화(서울예술관광)", "특화 테마관광 상품개발"], ["예술상생관광팀", "유니버설 관광 활성화", "다누림센터 운영계획 수립(중장기 운영계획안 포함)"], ["예술상생관광팀", "유니버설 관광 활성화", "유니버설 관광 거버넌스 및 대외기관·기업 협력 관리"], ["예술상생관광팀", "유니버설 관광 활성화", "홍보·콘텐츠 마케팅 운영(캠페인·SNS·홈페이지 콘텐츠 관리)"], ["예술상생관광팀", "유니버설 관광 활성화", "다누림관광센터 현장 상담·서비스 운영(무장애 관광정보 상담)"], ["예술상생관광팀", "유니버설 관광 활성화", "이동편의 서비스 운영(리프트버스·미니밴 운영, 보조기기 대여소 관리, 팸투어)"], ["예술상생관광팀", "유니버설 관광 활성화", "유니버설 관광 전문인력(현장영상해설사) 양성 및 운영"], ["예술상생관광팀", "유니버설 관광 활성화", "상담 데이터 및 통계 관리"], ["예술상생관광팀", "서울-지역 상생관광 활성화", "협의체 구성 및 운영계획 수립"], ["예술상생관광팀", "서울-지역 상생관광 활성화", "지역 상생관광 협의체 운영(참여지자체 소통)"], ["예술상생관광팀", "서울-지역 상생관광 활성화", "안테나숍 홍보·SNS 운영"], ["예술상생관광팀", "서울-지역 상생관광 활성화", "지역관광 안테나숍 현장운영(판매·전시·이벤트)"], ["예술상생관광팀", "서울-지역 상생관광 활성화", "안테나숍 판매정산 및 회계 관리"], ["예술상생관광팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["예술상생관광팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["예술상생관광팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리, 개인정보 관리 등)"], ["인사팀", "인사기획", "인력운영 계획 수립 및 인사관리 실무(포상, 징계, 경력개발면담, 인사기록관리 등)"], ["인사팀", "인사기획", "인사중점 추진과제 이행 및 인사제도 운영(인사·보수규정 및 취업규칙 관리, 임금피크제 운영 등)"], ["인사팀", "인사기획", "조직문화 개선 및 내부만족도 관리"], ["인사팀", "인사기획", "정규직·기간제 근무평정 시행계획 수립 및 운영"], ["인사팀", "채용관리", "정규직·기간제 채용 계획 수립 및 채용전형 운영"], ["인사팀", "채용관리", "근로계약 체결 및 입퇴사자 관리"], ["인사팀", "인재개발", "교육훈련계획 수립 및 커리큘럼 기획"], ["인사팀", "인재개발", "역량별 교육과정 설계·운영(공통역량·직무역량·관리역량 등)"], ["인사팀", "인재개발", "교육 실적관리 및 시스템(ERP) 운영관리"], ["인사팀", "노무관리", "노사협력(단체교섭·임금협약, 노사정협의회, 노사협의회·고충처리위원회 운영)"], ["인사팀", "노무관리", "성희롱·성폭력 및 직장 내 괴롭힘 고충처리(고충상담원, 심의위원회 운영, 예방교육)"], ["인사팀", "처우·보상관리", "복리후생 제도 기획 관리"], ["인사팀", "처우·보상관리", "보수관리(정규직/기간제 급여·4대보험·퇴직정산·연말정산 등)"], ["인사팀", "처우·보상관리", "총인건비 관리 및 예산 수립(성과급제도 운영 포함)"], ["인사팀", "복무관리", "복무제도 운영(근태관리시스템·출장 등 포함)"], ["인사팀", "복무관리", "남녀고용평등 및 일생활균형"], ["인사팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["인사팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["인사팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리 등)"], ["홍보팀", "기관 홍보 및 미디어 관리", "기관 홍보 및 미디어 관리 담당"], ["홍보팀", "기관 홍보 및 미디어 관리", "(고유) 지역 관광상생을 위한 매체홍보 담당"], ["홍보팀", "기관 홍보 네트워크 강화", "기관 홍보 네트워크 강화 담당"], ["홍보팀", "기관 사회공헌활동 운영", "기관 사회공헌활동 운영 담당"], ["홍보팀", "기관 배포물(홍보물, 기념품) 제작 및 관리", "기관 홍보 배포물 관리 담당"], ["홍보팀", "기관 성별영향평가 관리", "기관 성별영향평가 담당"], ["홍보팀", "서울관광 아카이브 콘텐츠 운영 및 기관 행사 촬영", "서울관광 아카이브 콘텐츠 운영 및 데이터 관리 지원"], ["홍보팀", "대표이사 수행 직원 관리 및 비용 처리", "대표이사 수행 직원 관리"], ["홍보팀", "대표이사 수행 직원 관리 및 비용 처리", "대표이사 수행 비용 처리 지원"], ["홍보팀", "부서 공통·평가 대응", "경영평가 지표 관리"], ["홍보팀", "부서 공통·평가 대응", "시의회·대외기관 보고 대응"], ["홍보팀", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 관서업무비, 주간회의 자료, 일정관리 등)"], ["관광인프라팀(관광정보센터)", "관광정보센터 운영(현장)", "안내인력 운영·관리(근무편성·교육·복무)"], ["관광인프라팀(관광정보센터)", "관광정보센터 운영(현장)", "관광안내 서비스 제공(교통·숙박·관광정보 상담)"], ["관광인프라팀(관광정보센터)", "관광정보센터 운영(현장)", "관광객 환대이벤트·프로모션 운영"], ["관광인프라팀(관광정보센터)", "관광정보센터 운영(현장)", "홍보물 배포 및 재고·시설 관리"], ["관광인프라팀(관광정보센터)", "관광정보센터 운영(현장)", "판매 현장 운영(디스커버서울패스·서울굿즈)"], ["관광인프라팀(관광정보센터)", "부서 공통·평가 대응", "부서 교육(센터) 참여"], ["관광인프라팀(관광정보센터)", "부서 공통·평가 대응", "부서 공통업무(문서 수·발신, 근태·물품, 개인정보 관리 등 센터 서무)"]];
+const SME=[{"직무": "글로벌관광산업 사업운영", "구팀": "글로벌관광산업팀", "현팀": "글로벌관광산업팀", "tasks": [["기획", "서울관광 해외 마케팅 국가 조사", "서울관광설명회 개최 및 해외관광박람회 참가를 위한 해외 주요 단체관광국가 조사 및 분석                                                                                                                                                                                                                                                                                                                                   최신 관광트랜드를 반영하여 온라인 관광시장 지속 성장 및 개별 관광객 규모 확대에 대한 시장 변화 반영"], ["기획", "해외 행사 기획", "서울관광설명회 및 해외관광박람회 행사 및 세부 콘텐츠 기획"], ["기획", "서울관광 해외시장 조사/분석", "서울국제트래블마트(SITM) 참가 해외 바이어 초청을 위한 핵심 및 잠재 관광시장 조사 및 분석                                                                                                                                                                                                                                                                                                                                                     해외 핵심여행사 회원사 국가별 관광시장 조사 및 분석을 통한 팸투어, 지원정책 등 연간 사업 방향성 설정"], ["기획", "서울관광 상품기획", "서울국제트래블마트(SITM) 참가 해외 바이어, 해외 핵심여행사 대상 서울 관광상품 개발을 독려하기 위한 위한 팸투어 기획 및 운영                                                                                                                                                                                                    우수관광상품 공모전 개최를 통한 신규 관광상품 선정 및 홍보 지원"], ["기획", "서울 관광스타트업 육성지원", "관광분야 상생협업 프로젝트 발굴을 목적으로 스타트업과 관광업계 간 비즈니스 연계를 강화하는 교류·상담 행사 기획"], ["홍보마케팅·프로모션", "서울관광 B2B·B2C 홍보", "(B2B) 해외 현지 바이어 대상 비즈니스 상담으로 서울관광 홍보 및 상품화 지원                                                                                                                                                                                                                                    (B2C) 해외 현지 소비자 대상 서울관광 홍보 및 서울방문 유도"], ["홍보마케팅·프로모션", "핵심여행사 대상 홍보 및 프로모션", "서울 관광상품 개발을 위한 신규 관광 정보 제공(월간 뉴스레터, 비짓서울 아카이빙 등)                                                                                                                                                                                                                                       해외 핵심여행사 대상 서울 관광상품 지원정책 안내를 통한 서울형 상품개발 독려"], ["홍보마케팅·프로모션", "우수관광상품 홍보", "우수관광상품 인증서(국/영문) 제공, 비짓서울 내 다국어 홍보페이지 콘텐츠 제작, 우수관광상품 홍보 리플릿 제작\n글로벌 OTA 연계 프로모션 및 유관 사업 연계를 통한 우수관광상품 인지도 확대"], ["홍보마케팅·프로모션", "서울관광 비즈니스 상담", "국내 최대 B2B 관광상담회 서울국제트래블마트(SITM) 참가사(국내외 약 550여개 사) 초청, 모집, 관리, 실적 조사, 비즈니스 상담 지원\n서울국제트래블마트(SITM) 관광홍보관, 팸투어, 설명회 등 부대행사 운영 및 홍보물 제작\n스타트업–관광업계 기업 간 B2B 비즈니스 상담을 통한 상생협업 프로젝트 발굴"], ["홍보마케팅·프로모션", "서울 관광스타트업 육성지원", "관광전시회 홍보부스 지원, 보도자료 배포, CEO 단독 인터뷰 및 서비스 단독 소개를 통해 관광스타트업 인지도 제고"], ["네트워크 관리", "국내 관광기업 및 해외 현지 네트워크 관리", "국내 관광기업(공동참가사) 네트워크 관리 및 판로개척 지원해외 현지 바이어, 미디어 등 네트워크 관리"], ["네트워크 관리", "서울상생관광 네트워크 관리", "서울국제트래블마트(SITM) 부대행사 관련 타 시도 협업, 참가기관 모집, 관리, 지원                                                                                                                                                                                                                               우수관광상품 운영사 얼라이언스(23개사) 발족으로 인바운드 여행업계 의견 수렴 등 관광업계 협력 네트워크 강화"], ["네트워크 관리", "국내외 여행사 및 유관기관 네트워크 관리", "해외 설명회, 전시회 참여 통한 신규 회원사 발굴 및 해당 국가 회원사 세일즈콜, 해당 국가 설명회 초청 통한 회원사 네트워크 지속 관리                                                                                                                                                                                                                                          국내 최대 B2B 관광상담회 서울국제트래블마트(SITM) 참가 국내외 관광업계 약 550여개 사 관리 및 SITM 행사 네트워킹 지원"], ["네트워크 관리", "해외 핵심여행사 네트워크 관리", "국가별 해외 핵심여행사 기존 회원사 지속 관리(여행업계의 잦은 이직으로 인한 담당직원의 집중 관리 및 핵심여행사 사업 설명 필요)                                                                                                                                                                                                       해외 설명회, 박람회를 통해 발굴된 신규 회원사 발굴 및 확보로 국가별 충성 회원사 DB 지속 구축"], ["네트워크 관리", "서울 관광스타트업 육성지원", "공모전 선정된 관광스타트업 및 오픈이노베이션 참가사를 중심으로 협업 네트워크를 구축·관리하여 지속 가능한 산업 연계 기반 조성"], ["산업지원", "서울 관광기업 판로개척 지원", "국내 관광기업의 서울관광설명회 및 해외관광박람회 공동참가 지원으로 판로 제공"], ["산업지원", "해외 핵심여행사  상품개발 지원", "서울시정 및 재단 추천 코스를 반영하여 서울형 상품개발을 할 수 있도록 신규 관광정보, 사진(이미지), 홍보비 지원"], ["산업지원", "서울관광 스타트업 지원", "서울 관광스타트업의 역량 강화 및 서울관광플라자 인지도 제고를 위한 55개 관광기업 대상 사무공간 제공 및 엑셀러레이팅 프로그램 운영\n서울 관광스타트업 대상 설명회, 멘토링, Closed IR, 데모데이 개최를 통해 투자 유치 역량 강화"], ["산업지원", "서울 관광스타트업 육성지원", "공모전 선정을 통해 성장 잠재력이 높은 관광산업 스타트업을 발굴하고, 성장 단계별 맞춤형 지원을 통해 관광산업 경쟁력 강화 도모"], ["사업운영", "서울관광 박람회 및 설명회 운영", "현지 바이어 및 미디어 섭외, 홍보마케팅 콘텐츠 기획운영, 공동참가기관 비즈니스 상담실적 관리, 연간 모객/판매 실적 추적관리"], ["사업운영", "해외 핵심여행사 대상 개발 상품 실적 관리", "해외 핵심여행사가 개발한 서울형 관광상품 관련 실적(건수, 모객 현황, 판매금액 등) 지속 관리"], ["사업운영", "우수관광상품 개발·운영", "2025 서울시 우수관광상품 10개 발굴 및 상품 인증, 홍보마케팅, 유관사업 연계 비즈니스 영역 확대, 프로모션, 컨설팅을 통한 상품 고도화 지원"], ["사업운영", "서울 관광스타트업 육성지원", "공모전을 통해 선정된 스타트업 대상으로 엑셀러 레이팅 프로그램 추진                                                                                                                                                                                                                                                                                                                                                 기 공모전 선정된 우수 스타트업 대상으로 홍보마케팅 및 서비스 고도화를 통한 후속 지원"]]}, {"직무": "관광자원개발 사업운영", "구팀": "관광자원개발팀", "현팀": "관광자원개발팀", "tasks": [["기획", "서울 등산관광 활성화 사업 기획", "서울 등산관광 활성화 사업 운영 전략, 세부 추진계획 및 예산 집행계획 수립"], ["기획", "서울달 운영 사업 기획", "서울달 운영 체계 고도화 및 신규 기획 과제 발굴, 서울 대표 야간관광 콘텐츠 '서울달'의 연간 운영 방향 및 중장기 발전 전략 수립"], ["기획", "서울관광 푸드 페스티벌 사업 기획", "미식관광 도시 서울 이미지 제고 목표로 '서울관광 푸드 페스티벌' 콘셉트 및 운영 전략 기획, 사업 운영 체계 구축 및 향후 확산 가능성 검토"], ["홍보마케팅·프로모션", "서울 등산관광 공식 SNS 및 웹페이지 운영", "등산관광 공식 SNS(인스타그램) 콘텐츠 기획/제작 및 이벤트 운영 관리\n등산관광 정보 제공을 위한 웹페이지 운영 관리"], ["홍보마케팅·프로모션", "서울 등산관광 홍보 콘텐츠 기획·제작 및 홍보물 관리", "등산관광 홍보물(가이드북, 리플릿) 제작 및 배포, 영상 기획 및 제작\n인플루언서 연계 홍보 콘텐츠 제작"], ["홍보마케팅·프로모션", "글로벌 하이킹 메이트 운영", "글로벌 하이킹 메이트 세부 운영계획 수립\n글로벌 하이킹 메이트 연간 미션 및 이벤트 운영"], ["홍보마케팅·프로모션", "서울달 공식 SNS 및 웹페이지 운영", "서울달 운영 정보 안내 및 홍보를 위한 인스타그램 및 노션(웹페이지) 운영"], ["홍보마케팅·프로모션", "서울달 온·오프라인 홍보, 콘텐츠 기획", "서울달 인지도 제고를 위한 계절별·테마별 온·오프라인 이벤트 기획 및 운영"], ["홍보마케팅·프로모션", "서울달 관광자원 관련 프로모션", "OTA·미디어·민관 협업을 통한 서울달 실질적 방문유도 및 탑승 수요 창출"], ["홍보마케팅·프로모션", "서울관광 푸드 페스티벌 온·오프라인 홍보, 콘텐츠 기획", "서울관광 푸드 페스티벌 내·외국인 관광객 유치를 위한 온·오프라인 홍보 진행"], ["홍보마케팅·프로모션", "서울관광 푸드 페스티벌 관련 프로모션", "미디어·콘텐츠·이벤트 연계로 서울관광 푸드 페스티벌 행사 인지도 및 방문 수요 확대"], ["네트워크 관리", "서울 등산관광 유관기관 네트워크 관리", "유관기관 공동 홍보, 제휴 프로모션 등 업무 협의\n미디어 취재 지원 및 촬영 협조"], ["네트워크 관리", "서울달 유관기관 네트워크 관리", "여행사, 여의도 인근 상권(호텔, 상업 시설 등) 및 협업 관계 업체 네트워크 관리\n서울달 취재 및 홍보 위한 미디어·기자 네트워크 관리\n서울시, 자치구, 여의도 공원, 소방·경찰 등 유관기관 협력 체계 구축 및 운영"], ["네트워크 관리", "서울관광 푸드 페스티벌 유관기관 네트워크 관리", "서울 관광 푸드 페스티벌 취재 및 홍보 위한 미디어·기자 네트워크 관리\n서울시, 자치구, 안전·운영 유관기관과의 협업 및 협조 요청을 통해 원활한 행사 운영 위한 기반 마련"], ["산업지원", "서울달 관광산업 연계 및 민관 협력 기반 산업 지원", "서울달을 활용한 관광 상품 및 산업 연계 프로그램을 발굴·지원하고, 관광업계 대상 홍보 지원, 팸투어, 셜명회 진행"], ["산업지원", "서울관광 푸드 페스티벌 미식업계 연계 및 기반 산업 지원", "외식업계, 셰프, 브랜드 등민관 협력 확대 통한 미식 관광 콘텐츠 발굴"], ["사업운영", "서울 등산관광센터 운영 및 환경 조성", "센터 방문객 대상 등산관광 편의 서비스 운영(등산물품 대여 서비스, 등산관광 안내 등), 센터 시설 관리 및 환경 조성"], ["사업운영", "서울 등산관광 프로그램 운영 및 관리", "센터별 정기 등산 체험 프로그램 및 특별 프로그램(팸투어) 운영"], ["사업운영", "서울 등산관광 활성화 사업 공정 및 실적 관리, 사업비 정산 및 보고", "서울 등산관광 활성화 사업 연간 사업 공정 관리 및 KPI 점검, 예산 집행현황 관리 및 정산"], ["사업운영", "서울달 관광자원 운영관리", "서울달 운영 전반 관리,안전·현장·인력 시설 관리 진행"], ["사업운영", "서울달 사업 공정 및 실적 관리, 사업비 정산 및 보고", "서울달 일별·월별·분기별 정산 진행 및 회계 처리, 서울시 반납금 분기별 정산 진행"], ["사업운영", "서울달 서울시 보고 및 업무 협업", "서울달 관련 정기·수시 보고 진행 및 서울시 요청 사항 즉각 대응"], ["사업운영", "서울달 운영 현장 인프라 관리", "탑승객 편의성 증진 위한 서울달 현장 및 보행 환경 개선 진행"], ["사업운영", "서울달 예약 플랫폼 관리", "서울달 예약 플랫폼(네이버, 카카오, OTA 7개 채널) 상품·리뷰 관리 및 공지 진행"], ["사업운영", "서울관광 푸드 페스티벌 행사 운영 및 현장안전 관리", "서울관광 푸드 페스티벌 행사 전반 운영 총괄 및 안전관리, 현장 동선, 인력 배치 등 운영 체계 관리\n경비, 교통 통제 등을 위한 유관기관 업무협의 및 행사안전관리계획 수립. 식중독이나 악천후 등 푸드페스티벌 특성에 맞는 현장안전관리 대비"], ["사업운영", "서울관광 푸드 페스티벌 사업 공정 및 실적 관리, 사업비 정산 및 보고", "서울관광 푸드 페스티벌 방문객 등 행사 실적 관리, 예산 집행현황 관리 및 정산"]]}, {"직무": "관광자원 현장운영(전문직)", "구팀": "관광자원개발팀", "현팀": "관광자원개발팀", "tasks": [["기획", "서울 등산관광 활성화 사업 기획", "서울 등산관광 활성화 사업 실무 기획/운영 검토(등산관광센터 운영, 실무자 교육훈련, 등산관광 프로그램)"], ["네트워크 관리", "서울 등산관광 유관기관 현장 대응", "등산관광 유관기관, 언론 등 센터 방문 시 현장 안내 및 운영 상황 설명\n센터 운영 및 프로그램 진행 과정에서 발생하는 대외 문의 대응 및 협업 추진"], ["사업운영", "서울 등산관광센터 현장환경 조성 및 관리", "센터 시설, 사무환경, 서비스 공간 전반 유지·보수 관리, 안전보건 기준에 따른 현장 점검\n이용객과 근무자의 안전을 고려한 환경 개선사항 발굴 및 관계 부서 협의를 통한 개선 조치"], ["사업운영", "서을 등산관광센터 제공 서비스 운영 및 관리", "등산관광 정보 제공, 장비 대여 등 센터 주요 서비스의 운영 품질 관리\n서비스 운영 과정에서 발생하는 이용객 불편사항 점검·개선"], ["사업운영", "서울 등산관광센터 실무자 대상 교육프로그램 운영", "센터 실무자 및 관련 종사자의 역량 강화를 위한 교육 프로그램 운영·관리(교육 진행, 강사 섭외, 만족도 관리)"], ["사업운영", "등산관광 프로그램 현장 운영 및 안전 관리", "등산관광 프로그램 일정 운영, 참여자 관리, 안전 사항 점검 등 현장 전반 관리\n기상, 현장 여건 등 변수 고려한 사고 예방 중심의 운영 및 문제 발생 시 즉각 대응"]]}, {"직무": "관광축제이벤트 사업운영", "구팀": "관광축제이벤트팀", "현팀": "관광축제이벤트팀", "tasks": [["기획", "서울 관광축제 기획", "축제 행사의 성격과 의도를 결정하고 어느 시점에 어떤 형태의 행사를 할 지에 대한 가장 기본사항을 잡아나가는 과업입니다. 행사의 전문적인 개최 운영을 위해서 입찰 등의 방식으로 수행사를 선발(여기에 따르는 지난한 제반 행정과업 포함)하고, 수행사 선발 후 보다 상세한 행사 기획을 진행합니다.\n\n축제의 기간/장소/주제 등 주요 프레임 기획, 축제 예산 배분 계획, 축제 준비 및 개최에 대한 일정 기획, 수행사 과업과 자체 추진 과업 정리, 사업계획서 작성, 수행사 선발 준비(과업내용서 등 주요 서류 확정), 수행사 선발 절차(일반적으로 입찰 제안서 평가로 진행), 수행사 선발 후 세부 실행계획 준비 등"], ["기획", "서울 관광이벤트 기획", "행사 전반의 기획과 더불어 세부적인 실행 이벤트들의 기획이 진행됩니다. 이를테면 기본적인 큰 행사가 있고 방문하시는 방문객 대상으로 체험 이벤트를 세부적으로 추진할 수 있는데 여기에 대응하는 각종 이벤트 기획이 진행되는 것입니다. 협업 이벤트 기획, 일시/상시 프로그램 운영 등도 있습니다.\n\n각 축제별 세부 실행 이벤트의 기획(예시: 광화문 마켓 개최 시 현장 카드 작성 이벤트 운영 등), 참여 후원사 또는 연계기관의 이벤트 관련 협업 방안 기획, 내외국인 관광객 이벤트 참여 방안 기획, 행사나 프로그램에 맞는 일시형 또는 상설형 현장 이벤트의 기획"], ["홍보마케팅·프로모션", "홍보물 및 기념품 제작", "행사를 알리고 붐업시키기 위해서는 행사의 홍보물과 기념 판촉물이 필요합니다. 각 제작물의 디자인은 물론, 어떤 홍보물의 종류를 제작할지에 대한 기획이 포함됩니다. 홍보 추진 채널의 종류에 따라서 온오프라인 홍보물 베리에이션이 필요하고 제작 실행 관리도 필요합니다. 배포방식 기획도 있습니다. \n\n행사 전반에 사용할 키비주얼 디자인 제작(전문가/전문업체 활용), 디자인 베리에이션(용도별, 사이즈별) 감수, 제작 홍보물의 종류(온라인, 배너, 현수막 등) 기획, 실물 홍보물 제작 수량 기획, 기념품 제작 및 배포 계획, 기념품 종류 기획, 기념품 실물 제작, 기념품 배포처/배포방식 확정 등"], ["홍보마케팅·프로모션", "관광축제 언론·SNS 홍보", "행사를 알리기 위해 홍보 과업을 수행합니다. 레거시 미디어 등 언론 매체를 대상으로 하는 전통적인 홍보는 물론, 현 시대에 중요한 온라인 홍보를 포함합니다. 기사 작성과 온라인 홍보영상을 제작하는 등 홍보 콘텐츠 제작과 이를 확산하는 과업이 있습니다. 온라인 구심점(홈페이지 등) 관리도 있습니다.\n\n행사별 홍보 추진방안 기획, 마케팅 기획(홍보 타게팅, 포지셔닝 등), 홍보 자원(홍보물, 기념품 등) 취합 및 관리, 보도자료 작성, 기획기사 작성, 행사 현장 프레스 투어 기획 및 운영관리, 행사별 별도 홈페이지 기획 및 운영, 행사별 별도 SNS 기획 및 운영, 온라인 콘텐츠 제작 및 배포 등"], ["홍보마케팅·프로모션", "관광축제이벤트 프로모션", "행사 홍보의 효과를 제고하기 위해 별도의 프로모션을 진행합니다. 현장 이벤트를 진행하기도 하고, 온라인 구심점(홈페이지, SNS 등)를 활용한 온라인 이벤트를 진행하기도 합니다. 기념품을 활용하기도 하고, 파트너/협업사가 있을 경우에는 파트너의 채널을 협조받아 프로모션을 진행하기도 합니다.\n\n온라인 채널 활용 프로모션 이벤트, 오프라인 현장 프로모션 이벤트, 기념품/판촉물 제공 프로모션, 파트너사 채널 활용 프로모션 등"], ["네트워크 관리", "관광축제이벤트 유관기관 관리", "옥외 행사의 경우에는 필연적으로 다양한 기관과의 협력이나 협조가 있어야 합니다. 장소의 대관이나 인프라(전기, 수도 등)의 사용, 주변 질서 유지나 안전에 관계된 사항(경찰, 소방 등)은 주요 유관기관 협조가 없이는 진행 불가합니다. 이에 따른 유관기관 네트워킹과 협조 체계 구축 업무가 있습니다.\n\n행사 장소 담당부서 네트워크 관리, 자치구청 네트워크 관리, 관할 경찰서 및 소방서 네트워크 관리, 행사별 별도 필요에 의한 기관 네트워크 등"], ["네트워크 관리", "관광축제이벤트 서울시 협조 요청", "서울시 출연기관인 재단 특성상 서울시 각 관계부서와 긴밀 협조가 필요합니다. 재단 소관부서인 관광정책과를 기본으로, 홍보기획관, 재난안전예방과 등 행사 개최마다 함께하는 반고정적 부서들이 있어 네트워킹이 필요합니다. 연계 행사 개최나 장소 대관 등과 관련, 일시 협조하는 부서들도 있습니다.\n\n재단 소관부서(관광정책과) 상시 협조체계 구축, 업무별/상황별 담당 부서와 네트워킹 및 업무 협조체계 구축 등"], ["산업지원", "지원금 신청 접수 및 관리", "(행사 및 축제 이벤트와 전혀 무관한 \"여행사 지원금 업무\"이며, 행사 팀에 배치될 직무가 아니고 여행사 네트워크 관리팀에 배치가 마땅한 직무입니다)\n\n외래 관광객의 서울 유치를 촉진하기 위해, 관광객 유치(모객)를 추진하는 관광업계의 여행사들을 대상으로 지원금 제도를 운영하는 경우가 있습니다. 이에 대한 기준 마련과 접수, 지급 절차 등이 포함됩니다. \n\n지원금 지급과 관련한 구조(지원 규모/방식 등) 기획, 여행사 대상 지원금 공고 게재, 여행사 대상 지원금 사업에 대한 알림(공문 발송, 설명회 등), 지원금 서류 접수, 지원금 서류 검토(약식 심사 형태), 서류 보완 관련 여행사 협의, 지원금 검토 결과의 여행사 공지, 지원금 지출 절차 시행 등"], ["산업지원", "여행사 네트워크 및 민원 관리", "(행사 및 축제 이벤트와 전혀 무관한 \"여행사 지원금 업무\"이며, 행사 팀에 배치될 직무가 아니고 여행사 네트워크 관리팀에 배치가 마땅한 직무입니다)\n\n지원금 사업의 추진에는 여행사 네트워크 관리와 여행사 클레임 관리가 필수적입니다. 여행사들의 적극적인 많은 참여를 유도하기 위해서 여행사와의 네트워크를 관리하고 있어야 할 필요성이 있습니다. 지원금 프로그램의 원활한 운영을 위해 참여 여행사와 지속 연락을 하고, 만족도 조사도 진행합니다.\n\n지원금 프로그램 대상 여행사의 네트워크 보유 및 관리, 여행사 대상 지원금 사업에 대한 알림(공문 발송, 설명회 등), 지원금 서류 등 제반 행정 절차와 관련한 여행사 응대, 여행사 클레임 관리, 서류 제출 관련한 여행사 담당자와의 지속적인 연락 업무, 여행사의 지원금 프로그램 만족도 조사 관리 등"], ["사업운영", "관광축제이벤트 운영", "면밀하게 설정한 계획에 따라서 행사의 개최와 운영을 진행합니다. 서울시장을 비롯한 VIP 참석자가 있을 경우에는 세레머니 운영이나 의전 업무도 포함됩니다. 행사가 잘 운영되었다면 만족도 조사를 통해 행사의 발전방향을 모색하고, 결과보고와 정산으로 행정적 처리도 진행합니다.  \n\n행사 실행계획에 따른 개최 업무 실행, 개막식 등 별도 세레머니에 대한 운영(참석 VIP 초청 및 의전 포함), 방문객 만족도 조사, 결과보고 및 정산 행정 시행 등"], ["사업운영", "관광축제이벤트 현장관리", "행사의 원활한 개최를 위해 행사별 기본적인 내용(빛초롱축제 등 전시, 썸머비치 수영장 설치 등)을 뒷받침하는 현장 운영관리가 필수적입니다. 일시 고용된 운영인력의 현장 운영도 있지만 행사 담당자들은 기간 중 행사장 상주 형태로 근무합니다. 안전관리 계획의 수립과 안전한 행사 운영도 포함됩니다.\n\n행사장 상주 근무, 안전관리 계획 수립, 관계기관 안전심의, 현장 통합 안전점검 수검, 상시 안전관리, 현장 운영인력 관리, 필요 시 행사 운영요원 업무 일시 수행, 상시적인 행사 제공사항 퀄리티 관리 등"]]}, {"직무": "관광인프라 사업운영", "구팀": "관광인프라팀", "현팀": "관광인프라팀", "tasks": [["기획", "관광인프라 사업기획", "- 연간 사업 운영을 위한 추진일정, 입찰, 예산 집행 등 계획 수립"], ["기획", "관광정보센터 운영계획", "- 연간 센터 및 안내소 운영을 위한 추진일정, 입찰, 예산 집행 등 계획 수립"], ["홍보마케팅·프로모션", "관광인프라 관련 사업 홍보", "- 사업 보도자료, 기획기사 배포\n- 관광정보센터 및 안내소 홍보를 위한 온오프라인 마케팅, 이벤트 등 운영\n- 서울 유니버설 관광 및 다누림 서비스(차량, 보조기기 등) 홍보를 위한 온/오프라인 마케팅, 이벤트, 프로모션, 캠페인 등 운영\n- 우수 서울스테이 선정 공모전 홍보 및 선정 숙소 협업 온오프라인 마케팅 운영"], ["홍보마케팅·프로모션", "서울관광재단 전사 온·오프라인 마케팅 관리", ""], ["네트워크 관리", "관광인프라 부처대응 및 유관기관 협력 네트워크 관리", "- 서울시청, 시의회 등 유관기관 협력\n- 관광약자 유관기관 및 학계/업계 네트워크 구축 및 유지관리\n- 유니버설 관광 거버넌스 참여기관 네트워크 관리 및 협업 사업 진행\n- 도시민박업 및 한옥체험업 숙소, 글로벌 OTA, 한국관광공사 등 유관기관 네트워크 관리 및 협업 사업 추진\n- 서울관광 대표 홍보물의 원활한 배포를 위한 호텔, 유관기관 등 정기배포처 관리 및 운영\n- 안테나숍 참여 지자체 협력을 통한 지역 관광자원 활용한 안테나숍 운영"], ["산업지원", "서울스테이·유니버셜 지원사업", "- 다누림 차량, 여행용 보조기기 예약현황 관리, 프로모션 운영\n- 다누림 홈페이지 운영 관리\n- 시각장애인을 위한 현장영상해설 코스 개발 및 해설사 양성, 투어 운영 관리\n- 도시민박업 및 한옥체험업 숙소 대상 운영물품 및 홍보물 등 지원\n- 우수 서울스테이(최대 20개소) 선정 및 지원금 지원 등"], ["사업운영", "종합관광정보센터·다누림관광센터 운영", "- 관광정보센터 및 관광안내소, 불편처리센터 인력 및 시설 관리, \n- 서울다누림관광센터 시설 유지관리 및 인력 운영관리\n- 내외국인 관광약자 대상 온라인/유선 상담 진행"], ["사업운영", "사업예산 및 정산관리", "- 월별 예산집행 현황 분석 및 사업비 정산"], ["사업운영", "기념품 및 패스 판매·정산", "- 월별 기념품 및 기후동행카드 등 패스 판매 및 수수료 정산"], ["사업운영", "서울관광 대표지도(안내서)", "- 내외국인 관광객 대상 관광편의 제공을 위한 홍보물 제작 및 배포 운영(소량/대량/정기)"], ["사업운영", "안테나숍 운영", "- 내외국인 관광객 대상 지역관광 정보제공, 상품 판매 및 프로모션, 온/오프라인 홍보마케팅 역할을 수행"]]}, {"직무": "관광센터운영(전문직)", "구팀": "관광인프라팀", "현팀": "관광인프라팀", "tasks": [["네트워크 관리", "유관기관 대외 협력 네트워크 활성화", "- 유관기관 대외 협력 네트워크 활성화"], ["사업운영", "다누림관광센터 운영 및 활성화", "- 여행용 보조기기 대여소 관리 및 서비스 운영\n- 휠체어 리프트 버스 및 미니밴 운영 지원\n- 다누림관광 홈페이지 운영 및 홍보 지원"], ["사업운영", "무장애 관광정보 제공 및 상담", "- 무장애 관광정보 제공 및 상담\n- 상담 데이터 및 통계 관리"], ["사업운영", "홍보물 및 기념품 배포 및 재고 관리", "- 홍보물 및 기념품 배포 및 재고 관리"], ["사업운영", "종합관광정보센터 운영 및 활성화", "- 서울 관광 정보, 교통, 숙박 등 제공 및 예약지원\n- 관광객 환대 이벤트 기획 및 진행\n- 안내실적 및 동향 관리\n- 불편사항 응대 및 현장 대응"], ["사업운영", "기념품 및 패스 판매 및 재고·매출 관리", "- 상징기념품 판매 지원 및 재고관리, 매출 정산, 수수료 정산 등 운영 및 관리\n- DSP 패스 판매 지원\n- 기후동행카드 판매 및 매출 정산 등 운영 및 관리"], ["사업운영", "관광정보센터 SNS 계정 관리", "- 도심 센터에서 운영하는 SNS(인스타그램 등)에 매주 내용 업데이트 및 팔로워수 관리\n- 관광안내소에서 운영하는 SNS(서우리좋아라)에 정기적으로 내용 업데이트 및 팔로워수 관리"], ["사업운영", "안테나숍 운영 및 활성화", "- 관광객 응대 및 지역관광 정보제공을 중심으로 시설/프로그램 안내, 굿즈숍 기념품 판매/재고관리 등\n- 운영 전반을 관리하며 담당부서 및 운영사 간 협업을 통해 안정적인 현장 운영"]]}, {"직무": "관광서비스 사업운영", "구팀": "관광서비스팀", "현팀": "관광서비스팀", "tasks": [["기획", "관광서비스 사업기획(디스커버서울패스, 서울의료관광, 서울문화관광해설사 등)", "디스커버서울패스, 서울의료관광, 서울문화관광해설사 등 팀 내 관광서비스 관련사업을 기획하고 실행할 수 있는 제반 계획을 수립하는 업무"], ["기획", "시장 환경·경쟁 상품 분석", "관광서비스 관련사업 계획을 수립하기 위해 관광객 현황, 트렌드를 비롯한 시장환경과 경쟁국가 및 기업의 유관 상품을 분석하는 업무"], ["기획", "신규 관광서비스 상품 기획", "현재 관광객들의 니즈를 수용할 수 있는 신규 관광서비스 상품을 연구 기획하는 업무"], ["홍보마케팅·프로모션", "서울관광서비스 사업 온·오프라인 홍보", "디스커버서울패스, 서울의료관광, 서울문화관광해설사 등 팀 내 관광서비스 관련사업을 온라인 및 오프라인 상에서 홍보하는 업무"], ["네트워크 관리", "관광서비스사업 제휴네트워크 발굴 및 관리", "디스커버서울패스, 서울의료관광, 서울문화관광해설사 등 팀 내 관광서비스 관련사업을 더욱 효과적으로 수행하기 위한 외부 협력망을 발굴하고 관리하는 업무"], ["네트워크 관리", "유관기관 협업네트워크 구축 및 관리", "팀 내 관광서비스 사업을 수행하는데 있어 협력이 필요한 유관기관과 협업 네트워크를 구축하고 관리하는 업무"], ["산업지원", "서울문화관광해설사 지원(육성·지원금)", "서울문화관광해설사 운영사업을 활성화하기 위한 해설사 지원금을 지급하고 필요한 지원 수단을 공급하는 제반 업무"], ["산업지원", "관광서비스분야 사업지원(운영지원·지원금)", "관광서비스 관련 제반 사업의 원활한 운영과 관련하여 필요한 지원 수단을 공급하는 제반 업무"], ["사업운영", "관광서비스 관련 사업 운영", "서울 관광산업을 활성화하기 위한 관광서비스 관련 각종 제반 사업을 운영하는 업무"]]}, {"직무": "관광서비스 사업지원(전문직)", "구팀": "관광서비스팀", "현팀": "관광서비스팀", "tasks": [["기획", "서울한류체험센터(서울컬쳐라운지) 운영 사업계획 수립 및 예산관리", "사업 운영 전반에 대한 연간 사업계획 및 세부계획을 수립하고, 수행 용역사 선정 및 프로그램 운영에 따른 예산편성, 집행 및 관리업무 수행"], ["기획", "특별 행사 기획 및 관리", "업계관계자 및 관련부서 담당자 초청 특별 행사 계획수립 및 환류업무 수행"], ["홍보마케팅·프로모션", "서울컬쳐라운지 온오프라인 홍보마케팅", "서울컬쳐라운지 공식 SNS 운영 계획수립 및 모니터링, 대내외 협업을 통한 홍보 촉진 업무 수행"], ["네트워크 관리", "어학당, 여행사 등 유관기관 대상 단체프로그램 운영 및 유치 대응", "유관기관 대상 단체프로그램 운영 서비스를 지원하며, 문의응대, 일정조율 및 현장 운영인력 배치업무 수행"], ["네트워크 관리", "서울시 및 지자체, 언론사 등 대내,외 유관기관 협업", "서울시, 지자체, 언론사 등 대내외 유관기관과의 협업 업무를 수행하고, 연계 프로그램 운영 및 언론사 대응업무 수행"], ["사업운영", "서울한류체험센터(서울컬쳐라운지) 운영 정산, 실적관리", "운영비 정산 및 집행내역을 관리하고, 프로그램 운영 실적 및  만족도 결과 등 주요지표 관리 업무"], ["사업운영", "시설운영 및 문화체험 프로그램 콘텐츠 관리", "서울컬쳐라운지 시즌별 공간구성 계획 수립 및 시설 안전운영 관리 업무"]]}, {"직무": "글로벌마케팅 사업운영", "구팀": "글로벌마케팅팀", "현팀": "글로벌마케팅팀", "tasks": [["기획", "글로벌 시장 조사/분석", "해외 소비자 대상 서울관광 콘텐츠 및 해외 프로모션 정량적 효과 측정"], ["기획", "사업기획", "사업계획서 작성 및 종합대행사 선정"], ["기획", "마케팅 전략 기획", "통합마케팅(IMC)전략 수립, 서울관광 캠페인 슬로건 개발, 핵심 타깃 국가별 전략 수립"], ["기획", "사업진행관리", "예산 집행 및 정산 관리"], ["광고·홍보마케팅\n/ 프로모션", "글로벌 콘텐츠 제작", "서울관광 홍보모델 선정, 영상 지면 등 홍보콘텐츠 제작"], ["광고·홍보마케팅\n/ 프로모션", "글로벌 홍보물 제작 -> 글로벌 홍보 확산", "디지털 미디어, 레거시 미디어, 뉴미디어 활용 서울관광 콘텐츠 확산 추진"], ["광고·홍보마케팅\n/ 프로모션", "서울관광 현지 프로모션 및 마케팅", "해외 B2C 행사 기획 및 운영, 홍보관 및 체험이벤트 추진, 국내외 축제/이벤트 연계 및 언론매체/한류문화체험 행사 연계 홍보 진행"], ["광고·홍보마케팅\n/ 프로모션", "국내외 기업 및 플랫폼 프로모션", "OTA 연계 서울 여행 상품 판매 프로모션 추진"], ["네트워크 관리", "관광객 유치 네트워크 관리", "관광부문 국제기구 가입, 총회참가 및 지속적 네트워크 유지"], ["사업운영", "글로벌 통합마케팅 종합관리", "서울관광 글로벌홍보 콘텐츠 제공, 국내외 온오프라인 프로모션 개최"]]}, {"직무": "MICE 1 사업운영", "구팀": "MICE1팀", "현팀": "MICE전략팀", "tasks": [["기획", "국제회의, 전시회, 국제이벤트 시장 조사/분석", "국내외 국제회의·전시회·국제이벤트 시장 동향, 수요 및 경쟁 환경을 조사·분석하여 사업 기획 및 전략 수립을 위한 기초 자료를 도출함.\n통계, 보고서, 설문조사, 간담회 등을 통해 주요 이해관계자 및 잠재 고객 특성을 분석함."], ["기획", "국제회의, 전시회, 국제이벤트 기획", "시장 분석 결과를 바탕으로 국제회의·전시회·국제이벤트의 사업 콘셉트, 프로그램 구성 및 운영 방안을 기획함.\n행사 목적 달성을 위한 콘텐츠, 일정, 예산, 이해관계자 협력 구조를 종합적으로 설계함."], ["기획", "국제회의, 전시회, 국제이벤트 전략 계획", "서울시와 재단의 중장기 전략을 반영하여 국제회의·전시회·국제이벤트 유치·개최·육성 전략을 수립함.\n성과 목표 설정 및 추진 로드맵을 마련하여 사업의 지속가능성과 경쟁력 강화를 도모함."], ["기획", "국제회의, 전시회, 국제이벤트 사업진행 관리", "국제회의·전시회·국제이벤트의 추진 전반에 걸쳐 일정, 예산, 성과 및 이해관계자와의 협업을 관리함.\n사업 수행 과정에서 발생하는 이슈를 조정·관리하여 최종 과업 이행 및 성과 창출을 도모함."], ["홍보마케팅·프로모션", "국제회의 유치 홍보", "서울의 국제회의 개최 경쟁력 및 지원제도를 국내외 잠재 주최자를 대상으로 홍보함.\n온·오프라인 매체, 홍보자료 및 대외 커뮤니케이션을 통해 도시 브랜드 인지도 제고를 추진함."], ["홍보마케팅·프로모션", "국제회의 유치 프로모션", "국제회의 유치 확대를 위해 박람회 참가, 세일즈 콜 등 맞춤형 프로모션 활동을 수행함.\n잠재 고객 및 핵심 이해관계자를 대상으로 전략적 협의을 통해 실질적인 유치 성과 창출을 도모함."], ["산업지원", "국제회의, 전시회, 국제이벤트 지원금 및 행사 지원", "국제회의·전시회·국제이벤트의 원활한 개최를 위해 지원금 운영 및 행정·운영 지원을 수행함.\n지원행사 선정, 집행 관리 및 사후 정산을 통해 사업 효과성과 투명성을 확보함."], ["산업지원", "국제회의 역량강화 지원", "국제회의 주최기관 및 관련 종사자의 전문성 강화를 위해 교육, 컨설팅 및 맞춤형 지원 프로그램을 운영함.\n국제회의 기획·운영 역량 제고를 통해 지속 가능한 국제회의 개최 기반을 마련함."], ["산업지원", "전시회 역량강화 지원", "국내 전시 주최자의 기획·운영 및 역량 강화를 위한 교육 및 지원 사업을 추진함.\n전시 산업 경쟁력 강화를 위해 단계별 맞춤형 성장 지원을 제공함."], ["사업운영", "국제회의 유치활동", "국제회의 유치를 위해 국내외 학·협회 및 주요 이해관계자를 대상으로 세일즈 및 협력 활동을 수행함.\n유치 제안, 상담 및 협상 등을 통해 국제회의 서울 개최를 적극 추진함."], ["사업운영", "국제회의, 전시회, 국제이벤트 현황관리(현장운영)", "개최 중인 국제회의, 전시회, 국제이벤트의 운영 현황을 점검하고 현장 이슈를 관리하여 행사의 안정적 진행을 지원함.\n주최기관 및 운영사와의 협업을 통해 행사 서비스 품질 및 참가자 만족도 제고를 도모함."]]}, {"직무": "MICE 2 사업운영", "구팀": "MICE2팀", "현팀": "MICE마케팅팀", "tasks": [["기획", "기업 MICE 사업기획", "사업 목적 달성을 위한 사업 추진방향 및 전략 수립, 추진내용 및 방법, 항목별 예산계획, 핵심 성과지표 설정 등 에 관한 업무"], ["기획", "기업 MICE 마케팅 전략 계획", "서울로의 MICE 유치를 위한 주요 타깃 시장 선정 및 서울 MICE 인프라, 관광자원, MICE 지원제도 등 중점 세일즈 전략 수립 등에 관한 업무"], ["기획", "MICE 콘텐츠 개발·확산 전략 및 계획 수립", "블레저 목적지 서울 콘텐츠 기획 방향, 전략 수립 및 국내외 전시회, 매체 연계 서울 MICE 홍보 계획 등에 관한 업무"], ["홍보마케팅·프로모션", "해외 MICE 홍보(국내외 매체, 전시회, 홍보관)", "글로벌 비즈니스 개최지로서의  서울 경쟁력 및 이미지 확산을 위한 국내외 MICE 전시회, 매체 등 연계 서울 MICE 홍보"], ["홍보마케팅·프로모션", "기업회의〮 인센티브관광 MICE 현지 프로모션", "해외 MICE 전문 전시회 및 로드쇼 참가 및 해외 바이어 상담, 현지 유력 여행사 세일즈 콜, 이벤트 진행 등을 통한 서울로의 MICE 수요 발굴 및 서울 MICE 홍보"], ["홍보마케팅·프로모션", "타기관 공동프로모션", "서울-지방 상생 및 지속가능한 MICE 기반 구축을 위한 서울-9개 파트너 지자체 간 공동 온오프라인 광고 및 홍보, 팸투어, 설명회 개최 추진 업무"], ["산업지원", "SMA 회원사 지원(행사, 마케팅활동, 파트너십, 홍보관)", "SMA 회원사 선발 및 운영(현재 345개사), SMA 회원사 활성화 행사 개최(신규 MICE 시설 답사, 비즈니스 상담회, 연례총회 등), Korea MICE Expo 서울홍보관 운영 및 공동참가사 선발〮지원(약 35개사), 해외 MICE 전시회 참가 SMA 회원사 선발 및 지원(연간 30여개사), 국내 유관기관 협력 업무"], ["산업지원", "서포터즈 운영", "MICE 글로벌 전문가 선발 및 운영, 심화교육 및 취업지원 프로그램 운영, 서울 개최 MICE 행사(국제회의 등) 현장 운영요원 활동 지원 업무"], ["산업지원", "서울 MICE 플라자 운영", "서울 MICE 3대 클러스터인 서남권(마곡) 서울 MICE 플라자  조성 및 다목적 회의실 대관 운영, 시설 관리 및 플라자 홍보 업무"], ["산업지원", "기업지원센터 운영", "서울 소재 관광 MICE 기업 대상 분야별 전문위원 상담(법무/경영, 회계/세무, 인사/노무), 엑셀러레이팅 프로그램, 법정 의무교육 지원"], ["사업운영", "MICE SNS 채널 운영", "서울컨벤션뷰로 SNS(영문) 3개 채널(인스타그램, 페이스북, 링크드인) 콘텐츠 기획, 제작 및 게시를 통한 서울 MICE 인프라 및 매력자원 홍보"], ["사업운영", "MICE 홈페이지 운영", "서울 MICE 인프라, 서비스, 지원프로그램 등 정보 소개 및 MICE 지원금 신청을 위한 CRM 시스템 운영 및 관리"], ["사업운영", "MICE 유치 및 개최 지원", "기업회의 〮인센티브 관광 단체 대상 서울 개최 행사 지원금 지원제도 수립, 개최지원 및 모니터링, 결과보고 검수 및 지원금 지급 업무"], ["사업운영", "MICE 2팀 사업 행사 운영 지원", "국내외 MICE 전시회 및 로드쇼 참가 시 비즈니스 상담, SMA 비즈니스 활성화 행사 등 부서 개최 행사 시 업무 지원 등"]]}, {"직무": "MICE 2 사업지원(전문직)", "구팀": "MICE2팀", "현팀": "MICE마케팅팀", "tasks": [["기획", "MICE 콘텐츠 동향 조사 및 전략 수립", "MICE 콘텐츠 개발 및 확산 계획 수립을 위한 동향 조사, 전략 수립 지원"], ["홍보마케팅·프로모션", "글로벌 서울 비즈니스 이벤트 목적지 서울 마케팅", "서울MICE슬로건 및 키비주얼, SNS 활용 서울 MICE 홍보마케팅 지원"], ["홍보마케팅·프로모션", "국내외 MICE 매체/전시박람회 연계 서울 MICE 홍보", "국내외 MICE 전시회/매체 활용 서울 MICE 기획기사 작성, 서울MICE슬로건 광고 및 홍보"], ["홍보마케팅·프로모션", "서울 MICE 기사 발굴/작성/취재 및 콘텐츠 홍보", "서울 MICE 홍보를 위한 자료 수집 및 영문 콘텐츠화 작업"], ["사업운영", "영어 번역 및 감수 업무 지원", "MICE1,2팀 및 전사 영문자료 번역 및 감수 지원"]]}, {"직무": "스마트관광 사업운영", "구팀": "스마트관광팀", "현팀": "AI혁신팀·디지털마케팅팀(분리)", "tasks": [["기획", "신규 스마트관광 사업기획", "- 기술,정부, 업계 동향 및 외부기관 요청에 따른 신규 사업기회를 발굴하고 기획함"], ["기획", "서울관광 온라인 서비스 인프라 개선 및 고도화 기획", "- IT  동향 및 관련 정책을 기반으로, 안정적인 온라인 서비스를 제공하기 위한, IT인프라 발전 계획을 수립하고 실행함"], ["기획", "생성형 AI 챗봇 운영 및 고도화 기획", "- 최신 기술인 AI의 발전 동향을 파악하고 관광 분야에 접목,도입, 확산하기 위해 서비스를 기획하고 계획을 수립함"], ["기획", "비짓서울 채널별(웹/앱/SNS/유튜브) 사업전략 수립 및 콘텐츠 기획", "- 온라인 서비스의 목표와 추진 방향을 수립하고 타겟팅 채널 선정, 채널간 차별화, 채널별 리소스 배분  등 전략을 수립함\n - 어권별/채널별 트렌드 및 데이터 분석을 통해 콘텐츠 노출 타깃, 제작 방향, 제작 형태, 확산 방식 등을 기획함"], ["기획", "서울 특화관광(예술관광) 활성화 사업기획", "- 예술관광 신규 사업의 전략을 수립하고, 얼라이언스 활성화를 위한 협업 프로젝트를 발굴 및 기획함"], ["홍보마케팅·프로모션", "비짓서울 채널별(웹/앱/SNS/유튜브) 콘텐츠 제작 및 홍보마케팅", "- 국내·외 비짓서울(Visit Seoul) 브랜드 홍보를 위한 디지털 마케팅 계획을 수립하고, 인플루언서 협업 등을 통한 캠페인 실행"], ["홍보마케팅·프로모션", "비짓서울 채널별(웹/앱/SNS/유튜브) 콘텐츠 확산 이벤트 추진", "- 서울관광 디지털 콘텐츠 글로벌 확산을 위한 어권별/채널별  온∙오프라인 이벤트 실행"], ["홍보마케팅·프로모션", "서울 특화관광(예술관광) 콘텐츠 제작 및 홍보마케팅", "- 서울 예술관광 콘텐츠(공연, 전시, 체험 등) 발굴 및 온∙오프라인 홍보마케팅 실행"], ["네트워크 관리", "비짓서울 연관 제휴 사이트 관리 및 운영 지원", "- 서울시/재단/유관기관 사업 연계 제휴 사이트 운영 및 관리 지원\n  (의료관광, 한류관광, 도보관광, DSP, 서울스테이, 서울컨벤션뷰로, 서울컬쳐라운지, 서울블레져 등)"], ["네트워크 관리", "글로벌서울메이트 신규 모집 및 네트워크 관리", "- 국내 거주 외국인 크리에이터(약 50개국 150명) 신규 모집 및 선발, 커뮤니케이션 채널(단톡방, 게시판 등) 운영\n - 글로벌서울메이트 네트워크 활성화 행사 개최(발대식, 교육, 해단식 등)"], ["네트워크 관리", "서울 예술관광 얼라이언스(SATA) 신규 모집 및 네트워크 관리", "- 서울 소재 문화예술 및 관광업계로 구성된 예술관광 얼라이언스 민관협의체 신규 모집 및 선발, 회원사 DB 관리"], ["산업지원", "서울 예술관광 얼라이언스(SATA) 협업 사업 추진", "- 회원사 간 네트워킹 활성화 지원 및 예술관광 활성화 협업사업 발굴·육성"], ["사업운영", "서울관광 온라인 서비스 유지보수 및 통합시스템 운영·관리", "- 서울관광 온라인 서비스 제공을 위한 인프라 및 어권별 콘텐츠(CMS) 통합관리 및 운영\n - 정보보안/ 네트워크/ 사용량 모니터링, 장애대응 등 대내외 요구사항 상시 접수 및 처리 \n - SW/HW 구성 및 변화 관리, 라이선스, 서비스레벨(SLA), 파트너사 및 제휴 사이트 관리 및 이슈 대응"], ["사업운영", "비짓서울 홈페이지 및 앱, API센터 서비스 운영·관리", "- 비짓서울 홈페이지(7개 어권) 및 앱(5개 어권)의 주요 메뉴, 기능 등 서비스 업데이트 운영\n - 비짓서울 API 센터 신규 구축 및 운영을 통해 B2B, B2C 서비스 동시 제공"], ["사업운영", "서울관광재단 홈페이지 및 서울관광 아카이브 운영·관리", "- 서울관광재단 홈페이지(2개 어권)의 주요 메뉴, 기능 등 서비스 업데이트 운영\n - 서울관광 아카이브 콘텐츠 업데이트 및 기능개선, 대내외 홍보 요청사항 및 기능개선 요구 대응"], ["사업운영", "비짓서울 소셜미디어(4개 어권 12개 채널) 운영", "- 어권별/채널별 소셜미디어 플랫폼 규정(방침) 모니터링 및 실시간 트렌드를 반영한 콘텐츠 운영\n - 팔로워 수/ 콘텐츠 참여반응/ 숏폼 조회수 등 주요 데이터 수집 및 분석"], ["사업운영", "비짓서울TV 유튜브 운영", "- 글로벌 타깃 유튜브 규정(방침) 모니터링 및 실시간 트렌드를 반영한 콘텐츠 운영\n - 구독자 수/ 콘텐츠 참여반응/ 숏폼-롱폼 조회수 등 주요 데이터 수집 및 분석"], ["사업운영", "글로벌서울메이트(국내 거주 외국인 크리에이터) 운영", "- 서울시/재단/자치구/유관기관 등 대내외 협업 서울관광 홍보 미션 운영(필수/선택/팝업이벤트)\n - 글로벌서울메이트 공식 인스타그램 운영 및 SNS 홍보 성과 분석, 개별 활동 평가 및 피드백"], ["사업운영", "서울 특화관광(예술관광) 운영", "- 권역별 예술자원(전시/공연 시설 등) 활성화를 위한 외국인 타깃 아트투어 코스 개발 및 팸투어(체험단) 운영"]]}, {"직무": "스마트관광 사업지원(전문직)", "구팀": "스마트관광팀", "현팀": "AI혁신팀·디지털마케팅팀(분리)", "tasks": [["기획", "타깃 시장별 관광트렌드 조사 및 데이터 분석", "- 어권별(영어/일본어/중간체/중번체) 관광 트렌드 및 소셜미디어 트렌드 조사\n - 타깃 시장별 디지털 미디어 데이터 분석을 통한 홍보마케팅 전략 수립, 분기별/월별 콘텐츠 기획"], ["홍보마케팅·프로모션", "서울관광 글로벌 캠페인 및 재단 사업 온라인 홍보 지원", "- 서울관광 글로벌 캠페인 홍보마케팅 전략 수립 시 외국어 자문 제공, 어권별 콘텐츠 검수 및 확산 지원\n - 해외 보도자료 배포 및 해외 매체 취재지원(팸투어 등)"], ["홍보마케팅·프로모션", "비짓서울 소셜미디어 어권별 캠페인 운영", "- 국내외 인플루언서 및 크리에이터 섭외 및 캠페인 추진방향 커뮤니케이션\n - 어권별/채널별 바이럴 콘텐츠 제작 및 홍보마케팅 실행(캠페인 성과 집계 등)"], ["홍보마케팅·프로모션", "비짓서울 채널별(웹/앱/SNS/유튜브) 활성화 이벤트 및 프로모션 운영", "- 어권별(영어/일본어/중간체/중번체) 이벤트 실행 및 콘텐츠 확산 광고 집행 \n - 이벤트 참여자 댓글, DM등 문의응대 및 모니터링, 당첨자 발표 및 개인정보 수집 등 지원"], ["네트워크 관리", "대내외 유관기관 협력 네트워크 구축", "- 해외 관광청, 미디어 등 B2B 네트워킹을 통한 서울관광재단, 비짓서울 등 브랜드 인지도 제고 활동\n - 한일포토콘테스트 공동주관 등 대내외 문화/관광 교류 행사 운영 지원"], ["산업지원", "외국어 번역 및 검수, 자문 등 전사 외국어 업무 지원", "- 해외 출장(박람회, 전시회, 로드쇼 등) 사전 홍보 및 현장 모객 등 운영 지원\n - 비짓서울 홈페이지, SNS 활용 설문조사 및 이벤트 운영 시 콘텐츠 확산 및 문의응대 지원"], ["사업운영", "비짓서울 채널별(웹/앱/SNS/유튜브) 콘텐츠 운영", "- 연간 상시 콘텐츠 외국어 번역 및 검수, 게재 지원\n - 어권별/채널별 DM, 댓글,  이메일 등 상시 모니터링, 문의 및 민원 실시간 응대"]]}, {"직무": "관광브랜드 사업운영", "구팀": "관광브랜드팀", "현팀": "관광브랜드팀", "tasks": [["기획", "서울 브랜드 기획", ""], ["기획", "서울굿즈 기획", "판매 및 홍보, 콜라보 등을 위한 제품 기획 및 수급 전략 수립"], ["기획", "서울 브랜드·굿즈 마케팅 전략 계획", "서울 브랜드 확산 및 서울굿즈 인지도 제고를 위한 마케팅 전략 수립(국내외 굿즈 트렌드 분석, 서울시 및 재단 내 사업 연계 마케팅 발굴 등)"], ["기획", "서울굿즈 판매 전략 기획", "매장의 조성 및 활성화, 판매 촉진을 위한 연간 판매 전략 및 판촉 계획"], ["홍보마케팅·프로모션", "서울 브랜드 홍보 콘텐츠 제작", ""], ["홍보마케팅·프로모션", "서울 굿즈 홍보 콘텐츠 제작", "제품 카탈로그, 브랜드 및 제품 홍보용 POP, 고객 커뮤니케이션 및 홍보마케팅을 위한 각종 온오프라인 콘텐츠 기획 및 제작"], ["홍보마케팅·프로모션", "서울 굿즈 홍보관 및 프로모션 운영관리", ""], ["홍보마케팅·프로모션", "서울 굿즈 온라인 홍보마케팅", "온라인 지도서비스, 비짓서울·STO SNS 및 자체 계정 활용 각종 온라인 프로모션 및 이벤트 기획 및 진행"], ["홍보마케팅·프로모션", "서울굿즈 오프라인 홍보마케팅(매장 프로모션 등)", "각 오프라인 매장에서 진행되는 시즌별 판촉 프로모션 및 이벤트 기획 및 진행"], ["홍보마케팅·프로모션", "서울굿즈 임시 홍보관 기획 및 운영관리", "연간 직간접 운영되는 팝업 스토어 등 임시 특별 매장 기획 및 운영"], ["홍보마케팅·프로모션", "민간 콜라보 추진", "민간 브랜드, 아티스트 등 다양한 민간 파트너십을 통한 콜라보 기획 및 마케팅 추진"], ["네트워크 관리", "서울 브랜드 확산 네트워크 관리", "서울굿즈 협의체, 디자인 자문단 등 각종 전문가 자문단 및 네트워크 발굴 및 간담회 개최, 공동 기획 업무 등"], ["네트워크 관리", "서울굿즈 위·수탁 사업체 관리", "재단 직영매장 입점사(수탁판매), 서울굿즈 입점 타기관(위탁판매) 등 위수탁판매 유관기관과의 계약관리 및 판매, 홍보 커뮤니케이션"], ["사업운영", "서울 굿즈 제작", "서울 브랜드 굿즈 및 브랜드 홍보용 굿즈 제작, 납품 관리"], ["사업운영", "서울 굿즈 판매·정산 서울 굿즈 매출 및 판매데이터 관리", "일간·월간·연간, 매장별, 상품별 판매 데이터 관리 및 매출 보고"], ["사업운영", "서울 굿즈 정산 및 회계 관리", "월별 위수탁 업체 수수료 정산 및 매출 정산, 정기 회계자료 작성 및 보고"], ["사업운영", "서울 굿즈 매장 운영 관리", "5개(26년1월 기준) 직영 매장의 VMD 등 판매 환경 조성, 판매 인력 배치 및 CS 교육 등 서비스 관리, 위탁매장의 진열 및 홍보물 관리"], ["사업운영", "서울 굿즈 재고 및 물류 관리", "일간·월간·연간, 매장별, 상품별 재고 데이터 관리 및 물류 이동 관리"]]}, {"직무": "경영기획", "구팀": "기획예산팀", "현팀": "기획예산팀", "tasks": [["경영기획", "중장기 경영전략 수립", "서울관광미래비전 3377과 연계하여 재단의 비전  미션 달성을 위한 중장기 경영전략 기획 및 수립\n비전 및 목표 설정에 따른 전략 과제 및 실행과제 도출하여 중장기 경영전략 기획 및 수립"], ["경영기획", "연도별 사업계획 수립 및 실행로드맵 기획", "관광산업 환경 분석하여 중장기 경영전략 수립 및 조직의 지속가능한 성장방향과 실행체계 수립\n재단의 중장기 경영목표 달성을 위한 전략적 실행로드맵 기획 및 관리"], ["경영기획", "기관장 주재 정례회의 운영", "기관장 주재 정례회의를 기획·운영하며, 주요 안건과 현안을 체계적으로 논의·결정할 수 있도록 지원\n기관 운영성과 제고 목적, 본부/부서별 주요일정·업무현안 대표이사 보고 및 대표이사 지시사항 이행 관리"], ["경영기획", "재단 연구업무(서울시민-외국인관광 실태분석)", "서울시민과 외국인 관광객 대상 실태를 조사·분석하여 관광 정책과 전략 수립에 필요한 근거를 마련\n연구 결과를 체계적으로 관리·활용해 재단의 중장기 경영기획과 세부사업 수립 지원"], ["조직관리", "전사 직제-조직 및 정원관리", "재단의 중장기 경영전략을 기반으로 전체 조직 구조를 설계·관리하여 효율적 운영 체계 유지\n재단의 조직 체계와 인력 규모를 최적화하여 경영전략 실행을 뒷받침하는 핵심 관리 기능"], ["조직관리", "부서별 업무분장 수립 및 조정", "조직 운영 효율성을 높이기 위해 변화에 맞춰 업무를 조정·관리하는 기능을 수행\n부서별 역할과 책임을 명확히 정의하고, 업무 중복이나 공백을 최소화하도록 분장을 수립"], ["조직관리", "이사회 개최 및 안건관리 등 사후관리", "서울관광재단 이사회 개최를 위해 일정 조율, 자료 준비, 회의 진행 지원 등 전반적인 운영을 수행하며, 이사회 안건의 상정부터 의결 및 결과 관리, 관련 사후 조치와 이행 상황 모니터링까지 체계적으로 관리"], ["조직관리", "임원 임기 관리 및 임원추천위원회 운영", "임원 임기 현황을 체계적으로 관리하며 임기 만료에 따른 후속 절차를 사전에 준비하고, 임원추천위원회의 위원 구성, 회의 일정 조율, 자료 준비 및 회의 운영 지원 등 전반적인 실무 담당"], ["조직관리", "규범(조례/정관/규정/지침 등 사규) 제개정 관리", "재단 운영에 필요한 조례·정관·규정·지침 등 사규를 제·개정 관리 및 지원"], ["대외협력", "대외기관 업무협력 (MOU 관리 등)", "재단-대외기관의 협력 관계 구축, 업무협약(MOU) 체결을 지원·관리 하여 재단의 대외협력 기반을 강화"], ["대외협력", "대외기관 요청사항 관리 등 대외 대응", "서울시의회 관련 회의 및 일정 운영을 지원하고 시의회 요구사항에 대응하며, 각종 업무보고 자료를 작성, 취합, 관리하여 재단 주요 현안을 체계적으로 공유하고 보고함"], ["대외협력", "시의회 운영 및 각종 업무보고", "시의회와의 소통·협력 창구 역할을 수행하며, 정례 운영과 각종 업무보고 담당\n재단 주요 현안과 성과를 체계적으로 보고·관리해 대외 신뢰성과 협력 기반을 강화"], ["대외협력", "후원 명칭 사용심의 운영", "후원 명칭 사용 심의 절차를 운영하여 외부 후원 활용의 적정성과 투명성을 확보\n심의 결과를 관리·반영해 재단의 대외협력 활동이 공정하고 신뢰성 있게 추진되도록 지원"], ["성과관리", "서울시 투자출연기관 경영평가 관리", "기관 경영평가를 총괄 관리하며, 평가 지표 달성을 위한 성과를 체계적으로 점검하여 실적보고서 작성\n재단의 경영성과를 객관적으로 분석·관리하여 평가 결과가 조직 운영 개선과 전략 수립에 반영되도록 지원"], ["성과관리", "기관장 성과지표 및 실적관리", "기관장의 성과 지표를 설정·관리하고, 목표 달성을 위한 실적을 체계적으로 점검하여 기관장 성과실적 보고서 작성\n기관장의 경영성과가 조직 운영 개선과 전략 수립에 반영되도록 기획 및 실행"], ["성과관리", "내부 성과평가 지표 및 성과관리 / 재단 사업별 실적관리", "내부 성과평가 지표를 설계·관리하고, 부서별 성과를 체계적으로 점검·분석을 토대로 성과 관리 결과를 활용해 조직 운영 개선과 전략 목표 달성을 지원 / 재단 사업별 실적을 체계적으로 관리·분석하여 성과 달성을 지원"], ["성과관리", "(외부)고객만족도 관리", "기관 경영평가 (외부)고객만족도 항목 관리 및 개선 방향을 제시"], ["예산관리", "예산편성/조정 및 집행 기준 관리", "재단의 예산을 편성·조정하고 합리적 재원 배분 및 관리 추진\n상위 기관(행정안전부/서울시) 예산집행 기준을 근거로 재단 집행 기준을 수립·운영하여 예산 집행의 투명성과 효율성을 확보"], ["예산관리", "출연금 및 자체재원 등 재원별 예산관리 및 확보", "출연금과 자체재원 등 재원별 예산을 체계적으로 관리·분석\n추가경정예산 및 예비비 소요 파악, 확보를 통한 원활한 사업 추진 환경 조성"], ["예산관리", "분기별 출연금 교부 신청/관리 및 월·분기별 예산 집행률 관리", "분기별 출연금을 신청·관리하여 재단 재원의 안정적 확보 도모\n월·분기별 예산 집행률 점검·관리를 통한 재정 운영의 투명성과 안정성을 확보"], ["예산관리", "중장기 재무전략 수립 및 재정운영계획 수립", "재단의 중장기 재무전략을 수립하여 지속가능한 재정 기반 마련\n재정운영계획 구체화 및 관리를 통해 안정적이고 효율적인 재원 운용을 지원"]]}, {"직무": "인사관리", "구팀": "인재경영팀", "현팀": "인사팀", "tasks": [["인사", "연간 및 중장기 인력운영계획 수립", ""], ["인사", "인사제도 운영(승진/근무평정/경력개발 등)", ""], ["인사", "조직내 소통활성화 및 조직문화 개선", ""], ["채용관리", "전사 채용수요 및 채용전형 관리", ""], ["채용관리", "입퇴사관리 및 근로계약 관리", ""], ["복무관리", "복무제도(근태 및 휴가관리 등) 및 복지제도(단체보험, 선택적 복지 등)", ""], ["복무관리", "유연근무제 운영, 일생활균형 및 모성보호 관련 업무", ""], ["복무관리", "근태관리(ERP) 등 인사시스템 관리", ""], ["급여관리", "보수제도 기획(보수체계 개선)", ""], ["급여관리", "총인건비 및 연간 인건비 예산 편성관리", ""], ["급여관리", "급여 정산(정규직/비정규직) 및 4대보험관리", ""], ["급여관리", "퇴직제도 관리(퇴직금 정산) 및 임직원 연말정산관리", ""], ["노무관리", "단체교섭 및 임금협약 관련 업무", ""], ["노무관리", "노사 파트너십 구축 및 노사협의회 운영", ""], ["노무관리", "노사정협의회 운영 관련 업무", ""], ["노무관리", "직장내 괴롭힘 관련 업무 및 고충처리 업무", ""], ["인재양성", "연간 교육훈련계획 수립", ""], ["인재양성", "분야별 교육과정 기획 및 운영", ""], ["인재양성", "임직원 교육실적 관리 및 산학협력(학위지원) 추진", ""], ["인재양성", "맞춤형 커리큘럼 설계 및 운영", ""]]}, {"직무": "경영지원", "구팀": "경영지원팀", "현팀": "경영지원팀", "tasks": [["계약", "입찰계약관리 및 수의계약(전자공개 및 1인견적) 관리", "- 경쟁입찰, 수의계약(전자공개, 1인견적 수의계약) 관련 사전규격 공고, 입찰공고, 제안요청서, 과업내용서, 산출기초조사서 등 서류 검토 및 공고 게시\n- 제안서 평가위원 선정, 정성적 평가, 가격평가, 우선협상대상자 선정 결과 안내, 입찰〮수의계약 체결 서류 검토, 지정정보처리장치(g2b) 활용 계약체결"], ["계약", "계약대금 관리 및 준공관리", "- 선금, 기성금, 잔금 지급 관련 서류 검토, 대금 지급 일정 안내 등\n- 준공(납품) 신고서, 준공 검사원, 준공 결과보고서(납품인수증), 검사조서 등"], ["계약", "공공구매 및 녹색제품 구매 관리, 계약 업무제도 개선", "- 계약실무안내서 제작, 임직원 대상 계약 실무 교육 실시, 대내외 요구자료 작성 및 정보공개\n- 희망녹색구매 계획 수립, 구매 실적 모니터링 및 실적 관리(월 1회 전사 실적 공유 등)"], ["정보공개/기록물관리", "기록물 관리 및 대내외 문서 수발신 관리", "- 대내외 공문/업무연락 수신 건 부서별 담당자 확인 및 배부처리(일일 20~50건)\n- 조직개편/인사발령에 따른 기록물-기록물철-단위업무 간 이관업무, 기록물 열람권 부여, 부서 간 인계 등 상시문의 대응"], ["정보공개/기록물관리", "정보공개제도 운영계획 수립 및 정보공개 관리(접수/결정통지/이의신청 등)", "- 정보공개제도 운영계획 수립, 정보공개심의회 개최 \n- 사전정보공표목록 현행화, 정보공개청구 대응(공개/부분공개/비공개/정보부존재/기관이송 등)"], ["재무회계", "자금운용 계획수립 및 자금관리(예금 인출납, 유휴자금 운용 등)", "- 자금운용 전략을 수립하고 예금/유휴자금의 효율적 배분을 통한 재무안전성 및 수익성 제고\n- 자금 흐름 상시 모니터링을 통해 선제적 유동성 리스크 관리"], ["재무회계", "회계 결산(분기/반기/연간) 및 외부감사 수감", "- 정기적 회계 결산을 통해 재무성과 및 재정상태를 산정, 회계기준에 따른 재무제표 작성\n- 외부감사를 통해 재무제표의 객관성과 신뢰성 확보"], ["재무회계", "세무조정 및 세무관리(세무신고/납부 등)", "- 법인세/부가세/원천세 등 세무 전반의 세법 의무 준수\n- 세무 이슈 사전 검토를 통해 추징/가산세 등 잠재 세무 리스크 예방"], ["재무회계", "회계전표/법인카드 관리 및 월마감 관리", "- 각종 지출내역 상시 점검을 통한 적격증빙/계정처리의 적정성 확보\n- 상시 모니터링을 통해 회계/세무상 오류 및 잠재 리스크 제거"], ["보건안전", "산업안전보건법/중대재해처벌법 대응 및 법규준수", "- 산안법·중처법 개정 상시 모니터링 및 법령에서 정하는 준수사항 이행, 안전보건매뉴얼 및 규정 관리, 산업안전보건위원회 운영, 재해대응조치 등\n- ISO45001(안전보건경영시스템 국제인증), 보건복지부 건강친화기업인증 등 외부기관 인증 취득 및 관리"], ["보건안전", "산업재해, 시민재해, 재해재난 등 대응 및 재해예방", "- 재단 운영 사업장 전수 순회점검(연 2회), 임직원 근무 사업장 전수 위험성평가(연 1회), 그외 상시점검 등을 통한 미흡사항 개선조치 기획·실시\n- 재단 개최 축제 대상 안전보건관리 실시(사전 안전정보 공유·교육, 안전매뉴얼 제작, 안전물품 구매, 사전점검-합동점검-사후점검 및 개선조치 이행)"], ["보건안전", "근로자 대상 질환예방(근골격계/온열/한랭/정신질환 등)", "- 근골격·온열·한랭질환 등 재단 근로자 및 도급근로자 대상 질환 발생 예방조치 (유해요인조사, 건강프로그램 운영, 질환 예방물품 배포 등)\n- 근로자 정신질환 발생 예방을 위한 근로자지원프로그램(EAP) 운영 및 힐링프로그램, 심리상담 운영"], ["보건안전", "근로자 대상 안전보건교육 실시 및 사업장 안전보건 강화", "- 근로자 대상 연간 산업안전보건교육(안전일반, 보건일반, 응급처치, 재해재단 등 주제 다양화) 12건 이상 기획·운영, 이수실적 관리\n- 일일미화/정기미화/방역 등 사업장 내 안전보건수준 유지, 기타 사업장 안전보건 개선활동(노후시설 리모델링 등) 기획·실시"], ["자산관리/총무", "물품 수급관리계획 수립 및 물품 구매관리", "- 정수관리대상 물품수급계획 수립 및 조달청 구매 추진 통한 물품의 계획적인 공급 관리\n- 비품의 취득·관리·폐기 절차 운영 및 재단 정기/수시 재물조사 실시 통한 물품관리 공백 최소화"], ["자산관리/총무", "물품 및 자산관리, 차량관리, 근무지원(우편물, 통신 및 임차물품관리 등)", "- 연간 재물조사 지원, 차량관리(운행내역 관리, 차량점검·충전 등 유지보수), 우편관리(등기, 택배, 명함 등 관리), 임차물품(정수기, 복합기 등) 관리\n- 재단 내 각종 근무지원요청 대응(경조사, 소모품, 복사용지 구매 등)"], ["청사/플라자 운영", "서울관광플라자 운영 계획 수립 / ESG 활성화 계획 수립", "- 서울관광플라자의 전반적 운영 방향과 프로그램·시설 운영에 대한 종합 계획 수립 및 운영\n- ESG 가치를 반영한 친환경·사회적 가치 창출·거버넌스 개선 방안 도출, 활성화 전략 수립 및 운영"], ["청사/플라자 운영", "입주공간 조성 및 입주시설 운영관리", "- 서울관광플라자 입주사 및 근로자 대상 업무 환경 조성, 시설 유지보수, 계약 및 대부료 납입 관리 \n- 대관시설 문의응대, 대관 세팅·원상복구, 음향 및 장비운영 지원, 서울관광플라자 투어 대응, 연간 대관실적 관리 및 계산서 관리"], ["청사/플라자 운영", "입주스타트업 모집 및 관리업무 지원", "- 신규 입주 스타트업 및 협력 스타트업 대상 행정 지원(사무실 공간 지원, 계약 절차 진행, 대부료 납입 관리 등)\n- 입주시설의 유지관리, 운영 프로세스 정비, 사용자 만족도 제고를 위한 시설 관리 및 운영(회의실, 사이니지, 환경 개선 등)"], ["ICT관리", "재단 ICT 기획 및 종합계획 수립", "- 재단의 ICT 중장기 전략 수립, 정보화 추진 과제·예산·정책 기획·관리\n- ICT 운영체계 전반을 분석하여 개선방향 도출, 조직 전체의 디지털 전환 지원"], ["ICT관리", "전사업무용 단말기/네트워크/소프트웨어 등 관리 및 유지보수", "- 업무용 단말기, 네트워크, 소프트웨어 운영 환경 유지, 장애·보안 이슈 대응\n- 사용환경의 안정성과 가용성 확보를 위해 설치·점검·성능 개선 수행"], ["ICT관리", "그룹웨어/ERP 운영 및 유지보수 / ICT헬프데스크 운영 등 관련 업무", "- 그룹웨어·ERP 시스템의 기능 운영, 권한 관리 및 개선 요구 처리\n- 사용자 지원(헬프데스크) 서비스 제공, 업무 효율을 높이기 위한 시스템 개선 관리"], ["개인정보/정보보안", "전사 개인정보보호 및 정보보안 정책 기획 및 시행", "- 관련 법령과 기준에 따라 개인정보보호·정보보안 정책 수립·시행\n- 점검·교육·보안조치 등을 통해 개인정보 및 정보자산 보호 수준 유지·향상"], ["개인정보/정보보안", "전사 정보시스템 점검 및 컴플라이언스 관리, 정보보호장비 운영 등", "- 정보시스템 운영 현황 점검, 법규·내부 기준 준수 여부 모니터링\n- 방화벽·SIEM 등 보안장비 운영, 보안위협을 분석·차단하고 취약점 개선"]]}, {"직무": "감사", "구팀": "감사관", "현팀": "감사실", "tasks": [["감사기획", "감사계획 수립(기본계획, 정기감사계획)", "∙ 연간 감사 기본계획 수립 및 공시(대표이사 및 감사 보고)"], ["감사기획", "적극행정 계획 수립", "∙ 적극행정 제도 운영 및 관리(적극행정 장려 및 면책제도 운영, 교욱, 홍보)\n∙ 적극행정 우수사례 발굴"], ["감사기획", "점검계획 수립", "∙ 정기감사, 복무감사 등 감사 건 별 감사 계획 수립 및 이행"], ["감사기획", "반부패청렴·인권경영 기본 계획 수립", "∙ 반부패 청렴 기본계획 수립 및 이행(연간)\n∙ 점검 결과 보고 및 이행실태 관리"], ["감사운영", "대내외 감사 대응", "∙ 서울시 감사위원회, 감사원 등 외부기관 감사 대응(감사자료 제출, 감사 수검, 감사결과 이행실태 점검 등)\n∙ 내부 정기감사 실시(연1회)"], ["감사운영", "상시 모니터링 및 조치", "∙ 반복적 위반 감사사례 중심 상시 모니터링 실시(계약, 일상감사, 법인카드, 민원 등)\n∙ 모니터링 항목별 월별/분기별/반기별 실시"], ["감사운영", "공직기강, 행동강령 점검 및 관리", "∙ 공직기강 확립 및 행동강령 위방행위 점검(월별/분기별)\n∙ 외부강의, 시간외, 근태, 병가, 사가독서휴가, 재택근무 등 착안사항 별 점검 실시(상시)"], ["감사운영", "서울시 부패방지시책평가", "∙ 경영평가 반영(4점) 부패방지시책평가 지표 관리 및 이행(연간), 부패방지시책 평가보고서 작성 제출 *청렴반부패 공모전 실시 및 사례 제출\n∙ 감사위원회 평가 대응(자료제출 및 이의신청 등)"], ["감사운영", "자체감사기구 활동 평가 수검", "∙ 감사위원회 평가 지표 이행(연간), 지표별 이해 계획 수립, 평가 보고서 작성 및 제출(연1회)\n∙ 평가 수검 및 대응"], ["감사운영", "청렴옴부즈만 운영", "∙ 서울관광재단 청렴옴부즈만 위원회 운영, 주요 사업 제안서 평가 입회 및 모니터링 실시\n∙ 청렴옴부즈만 섭외, 서면검토자료 작성, 대면 평가 및 평가결과 보고서 작성 등"], ["감사운영", "적극행정 제도구축 및 시행", "∙ 적극행정면책위원회 운영, 적극행정\n∙ 행정우수사례 공모전 심사 실시 등"], ["감사운영", "청렴교육 시행(청탁금지법, 이해충돌방지법 등)", "∙ 기관 필수 교육인 청렴교육(청탁금지법, 이해충돌방지법, 행동강령) 실시 및 독려(온오프라인)"], ["인권경영", "인권영향평가 시행", "∙ 서울시 인권경영평가 수검, 인권경영 교육 운영\n∙ 인권영향평가 실시(연1회), 개선과제 도출 및 이행"], ["인권경영", "공익·비리신고센터 운영", "∙ 공익비리신고센터 운영(정기감사 기간)으로"], ["인권경영", "인권경영위원회 운영", "∙ 인권경영위원회 운영, 인권경영 위원회 개최(인권경영계획 보고, 인권영향평가 결과 보고, 인권영향평가 개선계획 보고, 인권선언문 개정 의결 등)\n∙ 인권침해사고 발생시 조사 실시"], ["민원 및 법무관리", "재단 사업 법률 자문 관리", "∙ 재단 기관운영 및 사업운영 관련 사항 법률자문 관리(소송지원 및 관리 업무)"], ["민원 및 법무관리", "내외부 민원 관리", "∙ 응답소(국민신문고, 120, 현장민원 등) 등을 통한 외부 민원 대응 및 관리\n∙ 레드휘슬 등 내부 익명신고채널 민원대응 및 관리, 익명신고 모의훈련 실시 등"]]}, {"직무": "홍보", "구팀": "홍보팀", "현팀": "홍보팀", "tasks": [["홍보기획", "사업홍보 및 광고 전략 수립", "재단 사업 홍보 일정, 예산 분배, 콘텐츠 제작 등 연간 기관 홍보 계획 수립"], ["홍보기획", "기관 브랜딩 전략 수립", "재단/서울시 CI, 재단 비전 및 서울시정 등 브랜드를 활용한 홍보 계획 수립"], ["홍보기획", "미디어 네트워크 관리 전략 수립", "신문사, 방송사, 라디오 등 매체 관리 및 기자, PD, 작가 등 관계자 네트워킹을 위한 계획 수립"], ["홍보운영", "보도자료 검수 및 품질 관리", "15개 부서 보도자료 초안 검토, 부서 협의, 언론 배포, 기사화 관리, 언론 응대 등"], ["홍보운영", "기획기사 추진 및 현황 관리", "기획기사 주제 선정, 사업부서 협의, 매체사 발굴, 결과 추적 등"], ["홍보운영", "광고 추진 및 현황 관리", "모객이 필요한 대시민 사업에 대한 이미지 광고 추진 및 결과 추적 등"], ["홍보운영", "전사 보도 실적관리 및 상시 언론 모니터링", "주간 보도계획 취합 및 서울시 유관부서 공유, 주 1회 보도자료 및 기획기사 보도 건수 정리 및 전사 공유, 부서 평가지표 관리 등"], ["홍보운영", "브랜드 가이드 제작 및 관리", "CI 관리, CI 활용 기념품 제작 등"], ["홍보운영", "기관 주요 행사 프레스 투어 지원", "사업 부서 협의를 통한 프레스 투어 일정 확정, 기자 초청, 현장 등록 지원, 행사장 설명 지원 등"], ["홍보운영", "기관장 인터뷰 추진 및 현황 관리", "기관장 인터뷰 주제 선정, 인터뷰지 작성, 매체사 발굴, 인터뷰 당일 현장 지원, 최종 보도 내용 협의, 사후 자료 지원 등"], ["홍보운영", "자문기자단 운영 및 서울관광테마 취재 관리", "자문기자단 및 여행작가 섭외, 월별 테마 선정, 기사/사진자료 품질 관리, 언론 배포, 기사화 관리 등"], ["홍보운영", "기관 SNS 운영", "기관 주력 사업에 대한 홍보 콘텐츠 게재, 서울관광 아카이브 사진 활용 서울관광 홍보 콘텐츠 게재, 마스터 계정 및 데이터 관리 등"], ["홍보운영", "홍보 배포물 제작 및 재고 관리", "기관 홍보를위한 국/영문 브로슈어 및 영상 제작(전사 콘텐츠 취합, 디자인 검수, 인쇄 등), VIP 기념품 구매 및 배포 관리"], ["홍보운영", "전사 성별영향평가 관리", "홍보물, 생산물 일체에 대한 성별영향평가 전사 접수 및 제출"], ["네트워크 관리", "언론사 취재요청 응대", "신문사, 방송사, 라디오 등 취재 지원에 대한 자료 작성, 일정 협의, 사업부서 협의 등"], ["네트워크 관리", "기관 사회공헌활동 운영", "연간 사회공헌활동 계획 수립, 연간 활동 제공, 임직원 실적 관리, 개인평가 지표 관리"], ["네트워크 관리", "대외 협력 협의체 운영 및 관리", "광화문One팀, S-TCEP 얼라이언스 등 협력 테마 발굴, 공동 사회공헌활동 추진, 기관장/실무자 간담회 정기 개최 등"], ["촬영", "서울명소 사진 촬영 및 서울관광 아카이브 운영", "계절별 서울 자치구 관광명소 발굴 및 고품질 사진 확보, 서울관광 아카이브 홈페이지 고도화 관련 관리부서 협력 등"], ["촬영", "보도용 사진 및 주요 사내행사 촬영", "보도자료 품질 증진을 위한 기관 주력 사업과 사내행사에 대한 촬영 지원, 고품질 보도용 사진 확보"]]}];
+
+/* rail tabs */
+const items=[...document.querySelectorAll('.rail-item[data-t]')];
+items.forEach(t=>t.addEventListener('click',()=>{
+  items.forEach(x=>{x.classList.toggle('active',x===t);x.setAttribute('aria-selected',x===t)});
+  document.querySelectorAll('.tab-panel').forEach(s=>s.classList.toggle('on',s.id===t.dataset.t));
+  window.scrollTo({top:0});
+}));
+
+/* ── 검색형 콤보박스 (드롭다운 + 실시간 검색 + 자동완성 + 키보드 탐색) ── */
+function initCombo({inputId, listId, items, getLabel, getSearchText, getSubLabel, onSelect}){
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  const searchFn = getSearchText || getLabel;
+  let filtered = items.slice();
+  let activeIdx = -1;
+  let currentValue = items[0];
+
+  function highlight(label, q){
+    if(!q) return label;
+    const idx = label.toLowerCase().indexOf(q.toLowerCase());
+    if(idx === -1) return label;
+    return label.slice(0,idx) + '<mark style="background:var(--guide);color:inherit;border-radius:3px;padding:0 1px">'
+      + label.slice(idx, idx+q.length) + '</mark>' + label.slice(idx+q.length);
+  }
+
+  function render(q){
+    list.innerHTML = '';
+    activeIdx = -1;
+    if(filtered.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'combo-item empty';
+      empty.textContent = '검색 결과가 없습니다';
+      list.appendChild(empty);
+      return;
+    }
+    filtered.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'combo-item';
+      const sub = getSubLabel ? getSubLabel(item) : null;
+      div.innerHTML = highlight(getLabel(item), q)
+        + (sub ? `<div style="font-size:11.5px;color:var(--ink-faint);margin-top:1px">${highlight(sub, q)}</div>` : '');
+      div.addEventListener('mousedown', (e) => { e.preventDefault(); select(item); });
+      list.appendChild(div);
+    });
+  }
+
+  function open(q){
+    const query = q !== undefined ? q : '';
+    filtered = items.filter(item => searchFn(item).toLowerCase().includes(query.toLowerCase()));
+    render(query);
+    list.classList.add('open');
+  }
+
+  function close(){
+    list.classList.remove('open');
+    activeIdx = -1;
+  }
+
+  function select(item){
+    currentValue = item;
+    input.value = getLabel(item);
+    close();
+    onSelect(item);
+  }
+
+  function setActive(i){
+    const children = [...list.children].filter(c => !c.classList.contains('empty'));
+    children.forEach(c => c.classList.remove('active'));
+    if(i >= 0 && i < children.length){
+      children[i].classList.add('active');
+      children[i].scrollIntoView({block:'nearest'});
+    }
+    activeIdx = i;
+  }
+
+  input.addEventListener('focus', () => { input.select(); open(''); });
+  input.addEventListener('input', () => open(input.value));
+  input.addEventListener('keydown', (e) => {
+    const children = [...list.children].filter(c => !c.classList.contains('empty'));
+    if(e.key === 'ArrowDown'){ e.preventDefault(); if(!list.classList.contains('open')) open(''); setActive(Math.min(activeIdx+1, children.length-1)); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); setActive(Math.max(activeIdx-1, 0)); }
+    else if(e.key === 'Enter'){ e.preventDefault(); if(activeIdx>=0 && filtered[activeIdx]) select(filtered[activeIdx]); }
+    else if(e.key === 'Escape'){ input.value = getLabel(currentValue); close(); input.blur(); }
+  });
+  document.addEventListener('click', (e) => {
+    if(!input.contains(e.target) && !list.contains(e.target)) close();
+  });
+
+  select(items[0]);
+  return { select };
+}
+
+/* skeleton */
+const teams=[...new Set(SKEL.map(r=>r[0]))];
+const sBody=document.getElementById('skelBody'),sMeta=document.getElementById('skelMeta');
+function drawSkel(team){
+  const rows=SKEL.filter(r=>r[0]===team);
+  sMeta.textContent=`과업 ${new Set(rows.map(r=>r[1])).size}개 · 수행업무 ${rows.length}행`;
+  sBody.innerHTML='';let prev=null;
+  rows.forEach(([,task,work])=>{
+    const tr=document.createElement('tr');
+    if(task!==prev)tr.className='gstart';
+    tr.innerHTML=`<td class="grp">${task!==prev?task:''}</td><td>${work}</td>`;
+    sBody.appendChild(tr);prev=task;
+  });
+}
+initCombo({inputId:'teamSel', listId:'teamSelList', items:teams, getLabel:t=>t, onSelect:drawSkel});
+
+/* SME reference - 작성팀 기준 (직무명도 함께 검색됨) */
+const rBody=document.getElementById('refBody'),rMeta=document.getElementById('refMeta');
+const smeTeamNames=[...new Set(SME.map(j=>j['구팀']))];
+const smeTeamItems=smeTeamNames.map(team=>{
+  const jobs=SME.filter(j=>j['구팀']===team);
+  return { team, jobNames: jobs.map(j=>j['직무']).join(', ') };
+});
+function drawRef(item){
+  const team=item.team;
+  const jobs=SME.filter(j=>j['구팀']===team);
+  const totalTasks=jobs.reduce((s,j)=>s+j.tasks.length,0);
+  const 현팀=jobs[0]['현팀'];
+  rMeta.innerHTML=`직무 ${jobs.length}개(${item.jobNames}) · 과업 ${totalTasks}개
+    <span class="badge">작성: ${team}</span>
+    ${team!==현팀?`<span class="badge warn">현재: ${현팀}</span>`:''}`;
+  rBody.innerHTML='';
+  jobs.forEach(j=>{
+    if(jobs.length>1){
+      const jr=document.createElement('tr');
+      jr.innerHTML=`<td colspan="3" style="background:var(--bg);font-weight:800;color:var(--primary-dark);padding:9px 16px">${j['직무']}</td>`;
+      rBody.appendChild(jr);
+    }
+    let prev=null;
+    j.tasks.forEach(([g,t,d])=>{
+      const tr=document.createElement('tr');
+      if(g!==prev)tr.className='gstart';
+      tr.innerHTML=`<td class="grp">${g!==prev?g:''}</td><td>${t}</td><td class="desc">${d}</td>`;
+      rBody.appendChild(tr);prev=g;
+    });
+  });
+}
+initCombo({
+  inputId:'jobSel', listId:'jobSelList', items:smeTeamItems,
+  getLabel:item=>item.team,
+  getSearchText:item=>item.team+' '+item.jobNames,
+  getSubLabel:item=>item.jobNames,
+  onSelect:drawRef
+});
+</script>
+</body>
+</html>
